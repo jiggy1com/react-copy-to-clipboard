@@ -4,62 +4,62 @@ import {FaSave} from "react-icons/fa";
 import {FaPlus, FaThumbsUp, FaX} from "react-icons/fa6";
 import {useState} from "react";
 
-export default function Board({board, boardIdx}){
+export default function Board({board, boardIdx}) {
 
     const service = new CopyPasteService()
     const [wasSaved, setWasSaved] = useState(false)
     let newValue = board.title;
 
-    function renderBoardItems(){
-        return board.list.map((boardItem, idx)=>{
+    function renderBoardItems() {
+        return board.list.map((boardItem, idx) => {
             return <BoardItem
                 key={idx}
                 boardIdx={boardIdx}
                 boardItemIdx={idx}
-                boardItem={boardItem} />
+                boardItem={boardItem}/>
         })
     }
 
-    function onClick(){
+    function onClick() {
         console.log('onclick:boardIdx', boardIdx)
         service.createBoardItem('', boardIdx);
     }
 
-    function confirmDeleteBoard(){
+    function confirmDeleteBoard() {
         let conf = confirm('are you sure you want to delete this board');
-        if(conf){
+        if (conf) {
             service.deleteBoard(boardIdx)
         }
     }
 
-    function onChange(e){
+    function onChange(e) {
         newValue = e.target.value
     }
 
-    function onKeyUp(e){
+    function onKeyUp(e) {
         console.log('onkeyup', e.key)
-        if(e.key === 'Enter'){
+        if (e.key === 'Enter') {
             save()
         }
     }
 
-    function save(){
+    function save() {
 
         service.updateBoard(boardIdx, newValue)
         setWasSaved(true)
-        setTimeout(()=>{
+        setTimeout(() => {
             setWasSaved(false)
-        },1000)
+        }, 1000)
     }
 
-    function renderWasSaved(){
-        if(wasSaved){
+    function renderWasSaved() {
+        if (wasSaved) {
             return (
                 <span className={"ml-2"}>
-                    <FaThumbsUp />
+                    <FaThumbsUp/>
                 </span>
             )
-        }else{
+        } else {
             return (
                 <>
 
@@ -79,24 +79,25 @@ export default function Board({board, boardIdx}){
                                    name={"title"}
                                    defaultValue={board.title}
                                    onKeyUp={onKeyUp}
-                                   onChange={onChange} />
+                                   onChange={onChange}/>
                         </div>
                         <div className={"col-auto"}>
-                            <button className={"btn btn-primary"} onClick={save}>
-                                <FaSave />
+                            <button className={"btn btn-primary"}
+                                    onClick={save}>
+                                <FaSave/>
                             </button>
                             {renderWasSaved()}
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-primary float-right"}
                                     onClick={onClick}>
-                                <FaPlus />
+                                <FaPlus/>
                             </button>
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-danger float-right"}
                                     onClick={confirmDeleteBoard}>
-                                <FaX />
+                                <FaX/>
                             </button>
                         </div>
                     </div>

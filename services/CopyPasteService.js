@@ -1,14 +1,10 @@
-
 const LOCAL_STORAGE_KEY = 'cp';
 
 const BOARDS = [];
+const BOARD_ITEM_LIST = [];
 const BOARD_ITEM = {
     title: '',
-    list: []
-}
-const BOARD_ITEM_LIST = [];
-const ITEM = {
-    text: ''
+    list: BOARD_ITEM_LIST
 }
 
 const RANDOM_TITLES = [
@@ -36,59 +32,57 @@ export class CopyPasteService {
         this.createDispatcher();
     }
 
-    createDispatcher(){
+    createDispatcher() {
 
         // server side, bail early
-        if(typeof window === 'undefined'){
+        if (typeof window === 'undefined') {
             return
         }
 
-        if(!CopyPasteService.prototype.dispatcher){
+        if (!CopyPasteService.prototype.dispatcher) {
             CopyPasteService.prototype.dispatcher = this.createElement()
         }
-
-        return this
     }
 
-    createElement(){
+    createElement() {
         let d = document.createElement('div')
         d.setAttribute('id', Math.random())
         return d;
     }
 
-    dispatch(eventType = 'reload'){
+    dispatch(eventType = 'reload') {
         let event = new CustomEvent(eventType);
         this.dispatcher.dispatchEvent(event);
         CopyPasteService.prototype.dispatcher.dispatchEvent(event);
     }
 
-    dispatchForceReload(){
+    dispatchForceReload() {
         this.dispatch('forceReload');
     }
 
     // local storage methods
 
-    getBoards(){
-        if(typeof window !== 'undefined'){
+    getBoards() {
+        if (typeof window !== 'undefined') {
             let boards = localStorage.getItem(LOCAL_STORAGE_KEY)
             let ret = boards ? JSON.parse(boards) : BOARDS;
             return ret;
-        }else{
+        } else {
             let ret = BOARDS;
             return ret;
         }
     }
 
-    setBoards(what){
+    setBoards(what) {
         localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(what));
         this.dispatch();
-        return what;
     }
 
-    clearAllBoards(){
+    clearAllBoards() {
         localStorage.setItem(LOCAL_STORAGE_KEY, '');
     }
 
+    // thank you mozilla
     getRandomIntInclusive(min = 0, max = RANDOM_TITLES.length) {
         min = Math.ceil(min);
         max = Math.floor(max);
@@ -96,15 +90,15 @@ export class CopyPasteService {
     }
 
 
-    generateRandomTitle(){
+    generateRandomTitle() {
         return RANDOM_TITLES[this.getRandomIntInclusive()];
     }
 
     // boards crud
 
-    createBoard(title = ''){
+    createBoard(title = '') {
 
-        if(!title){
+        if (!title) {
             title = this.generateRandomTitle();
         }
 
@@ -121,17 +115,17 @@ export class CopyPasteService {
         this.setBoards(boards);
     }
 
-    readBoard(idx){
+    readBoard(idx) {
         return this.getBoards()[idx]
     }
 
-    updateBoard(boardIdx, title){
+    updateBoard(boardIdx, title) {
         let boards = this.getBoards()
         boards[boardIdx].title = title;
         this.setBoards(boards);
     }
 
-    deleteBoard(boardIdx){
+    deleteBoard(boardIdx) {
         let boards = this.getBoards()
         boards.splice(boardIdx, 1)
         this.setBoards(boards);
@@ -140,32 +134,28 @@ export class CopyPasteService {
 
     // lists crud
 
-    createBoardItem(item, where){
+    createBoardItem(item, where) {
         let boards = this.getBoards();
         boards[where].list.push(item);
         this.setBoards(boards);
     }
 
-    readList(){
+    readList() {
 
     }
 
-    updateBoardItem(boardIdx, boardItemIdx, value){
+    updateBoardItem(boardIdx, boardItemIdx, value) {
         let boards = this.getBoards()
         boards[boardIdx].list[boardItemIdx] = value;
         this.setBoards(boards);
     }
 
-    deleteBoardItem(boardIdx, boardItemIdx){
+    deleteBoardItem(boardIdx, boardItemIdx) {
         let boards = this.getBoards()
-        boards[boardIdx].list.splice(boardItemIdx,1);
+        boards[boardIdx].list.splice(boardItemIdx, 1);
         this.setBoards(boards);
         this.dispatchForceReload();
     }
-
-
-
-
 
 }
 

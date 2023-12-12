@@ -3,7 +3,7 @@ import {useState} from "react";
 import {FaThumbsUp, FaX} from "react-icons/fa6";
 import {FaCopy, FaSave} from "react-icons/fa";
 
-export default function BoardItem({boardIdx, boardItem, boardItemIdx}){
+export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
 
     const service = new CopyPasteService()
     let newValue = boardItem;
@@ -11,75 +11,76 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}){
     const [wasCopied, setWasCopied] = useState(false);
     const [wasSaved, setWasSaved] = useState(false);
 
-    function onClick(){
+    function onClick() {
         let conf = confirm('Are you sure you want to delete this item?')
-        if(conf){
+        if (conf) {
             service.deleteBoardItem(boardIdx, boardItemIdx)
-        }else{
+        } else {
             console.log('do not delete')
         }
     }
 
-    function onChange(e){
+    function onChange(e) {
         newValue = e.target.value;
     }
 
-    function onKeyUp(e){
-        if(e.key === 'Enter'){
+    function onKeyUp(e) {
+        if (e.key === 'Enter') {
             newValue = e.target.value;
             save()
         }
     }
 
-    function doCopy(e){
+    function doCopy(e) {
         navigator.clipboard.writeText(boardItem)
         setWasCopied(true)
-        setTimeout(()=>{
+        setTimeout(() => {
             setWasCopied(false)
-        },1000)
+        }, 1000)
     }
 
-    function save(){
+    function save() {
         service.updateBoardItem(boardIdx, boardItemIdx, newValue)
         setWasSaved(true)
-        setTimeout(()=>{
+        setTimeout(() => {
             setWasSaved(false)
-        },1000)
+        }, 1000)
     }
 
-    function renderWasCopied(){
-        if(wasCopied){
+    function renderWasCopied() {
+        if (wasCopied) {
             return (
                 <span className={"ml-2"}>
-                    <FaThumbsUp />
+                    <FaThumbsUp/>
                 </span>
             )
-        }else{
+        } else {
             return (
                 <></>
             )
         }
     }
 
-    function renderWasSaved(){
-        if(wasSaved){
+    function renderWasSaved() {
+        if (wasSaved) {
             return (
                 <span className={"ml-2"}>
-                    <FaThumbsUp />
+                    <FaThumbsUp/>
                 </span>
             )
-        }else{
+        } else {
             return (
                 <></>
             )
         }
     }
 
-    return(
+    return (
         <div className={"row mb-3"}>
             <div className={"col-auto"}>
-                <button className={"btn btn-danger"} onClick={onClick}>
-                    <FaX />
+                <button className={"btn btn-danger"}
+                        onClick={onClick}>
+                    <FaX/>
                 </button>
             </div>
             <div className={"col"}>
@@ -89,17 +90,19 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}){
                     defaultValue={boardItem}
                     onChange={onChange}
                     onKeyUp={onKeyUp}
-                        />
+                />
             </div>
             <div className={"col-auto"}>
-                <button className={"btn btn-primary"} onClick={save}>
-                    <FaSave />
+                <button className={"btn btn-primary"}
+                        onClick={save}>
+                    <FaSave/>
                 </button>
                 {renderWasSaved()}
             </div>
             <div className={"col-auto"}>
-                <button className={"btn btn-primary"} onClick={doCopy}>
-                    <FaCopy />
+                <button className={"btn btn-primary"}
+                        onClick={doCopy}>
+                    <FaCopy/>
                 </button>
                 {renderWasCopied()}
             </div>
