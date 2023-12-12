@@ -1,0 +1,135 @@
+$breakpoints: (
+    'xs': ('min': '0', 'max': '575'),
+    'sm': ('min': '576', 'max': '767'),
+    'md': ('min': '768', 'max': '991'),
+    'lg': ('min': '992', 'max': '1199'),
+    'xl': ('min': '1200', 'max': '1399'),
+    'xxl': ('min': '1400', 'max': '9999'),
+);
+
+@mixin media($breakpoint) {
+    @media (_breakpoint($breakpoint, true, true)) {
+        @content;
+    }
+}
+
+@mixin mediaMin($breakpoint) {
+    @warn('test');
+    @media (_breakpoint($breakpoint, true, false)) {
+        @content;
+    }
+}
+
+@mixin mediaMax($breakpoint) {
+    @media (_breakpoint($breakpoint, false, true)) {
+        @content;
+    }
+}
+
+@function _breakpoint($breakpoint, $useMin: true, $useMax: false) {
+    $linebreak: '\A ';
+
+    // make sure the key exists or notify user
+    @if (map-has-key($breakpoints, $breakpoint) == false) {
+        $msg: '';
+        $msg: $msg +
+            "Your breakpoint '" +
+            $breakpoint +
+            "' does not exist. Check your spelling. It must be one of the following:" +
+            $linebreak;
+        @each $key, $value in $breakpoints {
+            $msg: $msg + ' - ' + $key + $linebreak;
+        }
+        @warn $msg;
+        @return 'max-width: 0px';
+
+        // check for a false, false call (should never happen now)
+    } @else if ($useMin == false and $useMax == false) {
+        @warn ("You can not set useMin and useMax to false. Use one of the following:"
+            + $linebreak + " - breakpoint('desktop')"
+            + $linebreak + " - breakpoint('desktop', true, false)"
+            + $linebreak + " - breakpoint('desktop', false, true)"
+            + $linebreak + " - breakpoint('desktop', true, true)");
+        @return 'max-width: 0px';
+    } @else {
+        // get the breakpoint props
+        $bp: map-get($breakpoints, $breakpoint);
+        $min: map-get($bp, 'min');
+        $max: map-get($bp, 'max');
+
+        $ret: '';
+
+        @if $useMin {
+            $ret: $ret + 'min-width: ' + $min + 'px';
+        }
+
+        @if $useMin and $useMax {
+            $ret: $ret + ') and (';
+        }
+
+        @if $useMax {
+            $ret: $ret + 'max-width: ' + $max + 'px';
+        }
+
+        @return $ret;
+    }
+}
+
+
+//@mixin getBreakpoint($breakpoint){
+//    $min: map-get($breakpoints, $breakpoint);
+//    $max: map-get($breakpoints, $breakpoint);
+//    //@media (min-width: #{$min}) and (max-width: $max ){
+//    //    @content;
+//    //}
+//    //$bp: map-get($breakpoints, $breakpoint);
+//    //$min: map-get($bp, 'min');
+//    //$max: map-get($bp, 'max');
+//
+//    $ret: '';
+//
+//    @if $useMin {
+//        $ret: $ret + 'min-width: ' + $min + 'px';
+//    }
+//
+//    @if $useMin and $useMax {
+//        $ret: $ret + ') and (';
+//    }
+//
+//    @if $useMax {
+//        $ret: $ret + 'max-width: ' + $max + 'px';
+//    }
+//    @return $ret;
+//}
+
+@mixin grid($frames){
+    display: grid;
+    grid-template-columns: repeat $frames;
+    grid-gap: 10px;
+}
+
+@mixin gridColumn($map){
+    // $map (start: 1, span: 3, row: <optional>)
+    @if(map-get($map, 'start')){
+        grid-column-start: map-get($map, 'start');
+    }
+
+    @if(map-get($map, 'end')){
+        grid-column-end: map-get($map, 'end');
+    }
+
+    @if(map-get($map, 'row')){
+        grid-row: map-get($map, 'row');
+    }
+
+}
+
+//$grid-breakpoints: (
+//    xs: 0,
+//    sm: 576px,
+//    md: 768px,
+//    lg: 992px,
+//    xl: 1200px,
+//    xxl: 1400px
+//);
+
