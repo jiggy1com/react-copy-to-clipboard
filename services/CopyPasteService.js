@@ -29,8 +29,6 @@ const RANDOM_TITLES = [
     'Just Kidding',
 ];
 
-// convert to singleton
-
 export class CopyPasteService {
 
     constructor() {
@@ -66,8 +64,7 @@ export class CopyPasteService {
 
     dispatchForceReload(){
         let event = new CustomEvent('forceReload');
-        this.dispatcher.dispatchEvent(event);
-        CopyPasteService.prototype.dispatcher.dispatchEvent(event);
+        this.dispatch(event);
     }
 
     // local storage methods
