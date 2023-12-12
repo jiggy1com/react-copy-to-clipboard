@@ -76,6 +76,13 @@ export default function Index({defaultBoards}){
                             Data is saved to localStorage.<br />
                             To copy a value to your clipboard, click the copy button.
                         </div>
+                        <div className={"alert alert-info"}>
+                            Features TODO:<br />
+                            - add drag n drop functionality to reorder list items and boards<br />
+                            - add create account & sign in functionality<br />
+                            - add API to save data to database (mongodb) so list can be retrieved from any browser<br />
+                            - ?<br />
+                        </div>
 
                         <button className={"btn btn-primary mb-3"} onClick={addBoard}>
                             Add New Board
