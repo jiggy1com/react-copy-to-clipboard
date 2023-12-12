@@ -81,6 +81,7 @@ export default function Index({defaultBoards}){
                             - add drag n drop functionality to reorder list items and boards<br />
                             - add create account & sign in functionality<br />
                             - add API to save data to database (mongodb) so list can be retrieved from any browser<br />
+                            - add button to open (if link)<br />
                             - ?<br />
                         </div>
 
