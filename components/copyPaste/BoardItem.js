@@ -1,7 +1,7 @@
 import {CopyPasteService} from "@/services/CopyPasteService";
 import {useState} from "react";
-import {FaThumbsUp, FaX} from "react-icons/fa6";
-import {FaCopy, FaSave} from "react-icons/fa";
+import {FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
+import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
 
 export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
 
@@ -37,6 +37,12 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
         setTimeout(() => {
             setWasCopied(false)
         }, 1000)
+    }
+
+    function doOpen(){
+        if(isURL()){
+            window.open(boardItem)
+        }
     }
 
     function save() {
@@ -75,10 +81,23 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
         }
     }
 
+    function isURL(){
+        return boardItem.slice(0, 4) === 'http'
+    }
+
+    function getButtonLinkClassList(){
+        let classList = ['btn', 'btn-primary'];
+        if(!isURL()){
+            classList.push('disabled')
+        }
+        return classList.join(' ');
+    }
+
     return (
         <div className={"row mb-3"}>
             <div className={"col-auto"}>
                 <button className={"btn btn-danger"}
+                        title={"Delete Item"}
                         onClick={onClick}>
                     <FaX/>
                 </button>
@@ -94,6 +113,7 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
             </div>
             <div className={"col-auto"}>
                 <button className={"btn btn-primary"}
+                        title={"Save"}
                         onClick={save}>
                     <FaSave/>
                 </button>
@@ -101,10 +121,18 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
             </div>
             <div className={"col-auto"}>
                 <button className={"btn btn-primary"}
+                        title={"Copy"}
                         onClick={doCopy}>
                     <FaCopy/>
                 </button>
                 {renderWasCopied()}
+            </div>
+            <div className={"col-auto"}>
+                <button className={getButtonLinkClassList()}
+                        title={"Open"}
+                        onClick={doOpen}>
+                    <FaUpRightFromSquare />
+                </button>
             </div>
         </div>
     )

@@ -83,6 +83,7 @@ export default function Board({board, boardIdx}) {
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-primary"}
+                                    title={"Save"}
                                     onClick={save}>
                                 <FaSave/>
                             </button>
@@ -90,12 +91,14 @@ export default function Board({board, boardIdx}) {
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-primary float-right"}
+                                    title={"Add Item"}
                                     onClick={onClick}>
                                 <FaPlus/>
                             </button>
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-danger float-right"}
+                                    title={"Delete Board"}
                                     onClick={confirmDeleteBoard}>
                                 <FaX/>
                             </button>
@@ -103,9 +106,7 @@ export default function Board({board, boardIdx}) {
                     </div>
                 </div>
                 <div className={"card-body"}>
-                    <div className={"container"}>
-                        {renderBoardItems()}
-                    </div>
+                    {renderBoardItems()}
                 </div>
             </div>
         </div>
