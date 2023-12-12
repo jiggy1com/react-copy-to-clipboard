@@ -6,7 +6,7 @@ import {FaCopy, FaSave} from "react-icons/fa";
 export default function BoardItem({boardIdx, boardItem, boardItemIdx}){
 
     const service = new CopyPasteService()
-    let newValue = '';
+    let newValue = boardItem;
 
     const [wasCopied, setWasCopied] = useState(false);
     const [wasSaved, setWasSaved] = useState(false);

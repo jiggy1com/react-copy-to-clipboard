@@ -56,16 +56,14 @@ export class CopyPasteService {
         return d;
     }
 
-    dispatch(e = 'reload'){
-        let event = new CustomEvent(e);
+    dispatch(eventType = 'reload'){
+        let event = new CustomEvent(eventType);
         this.dispatcher.dispatchEvent(event);
         CopyPasteService.prototype.dispatcher.dispatchEvent(event);
     }
 
     dispatchForceReload(){
-        let event = new CustomEvent('forceReload');
-        this.dispatcher.dispatchEvent(event);
-        CopyPasteService.prototype.dispatcher.dispatchEvent(event);
+        this.dispatch('forceReload');
     }
 
     // local storage methods
