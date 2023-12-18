@@ -3,10 +3,10 @@
  * @constructor
  */
 export function GlobalMailObject(){
-    this.smtpUser = 'kidsfurnituresuperstore@verysecurewebsite.com';
-    this.smtpPass = 'Evelyn2023!!';
-    this.smtpHost = 'verysecurewebsite.com';
-    this.smtpPort = '587';
+    this.smtpUser = '';
+    this.smtpPass = '';
+    this.smtpHost = '';
+    this.smtpPort = '';
 }
 
 /**
@@ -14,10 +14,10 @@ export function GlobalMailObject(){
  * @constructor
  */
 export function ClientMailObject(){
-    this.url = 'https://www.kidsfurnituresuperstore.us';
-    this.companyName = 'Kids Furniture Superstore';
-    this.email = 'infokids41@gmail.com';
-    this.cc = 'jiggy1com@gmail.com';
+    this.url = '';
+    this.companyName = '';
+    this.email = '';
+    this.cc = '';
 }
 
 /**
