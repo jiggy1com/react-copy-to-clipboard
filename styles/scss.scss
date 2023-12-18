@@ -1,4 +1,5 @@
 @import "mixin";
+@import "clipboard";
 
 $bg-primary: #78C2AD;
 $bg-secondary: #F3969A;
@@ -18,6 +19,10 @@ $white: #fff;
     padding: 30px;
 }
 
+.draggable:hover,
+.draggable:focus{
+    cursor: grab;
+}
 
 header {
     img{

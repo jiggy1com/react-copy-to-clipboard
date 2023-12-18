@@ -1,3 +1,6 @@
+import {UserService} from "@/services/UserService";
+import {FetchService} from "@/services/FetchService";
+
 const LOCAL_STORAGE_KEY = 'cp';
 
 const BOARDS = [];
@@ -27,7 +30,8 @@ const RANDOM_TITLES = [
 
 export class CopyPasteService {
 
-    constructor() {
+    constructor(isLoggedIn) {
+        this.isLoggedIn = isLoggedIn;
         this.boards = this.getBoards();
         this.createDispatcher();
     }
@@ -63,14 +67,34 @@ export class CopyPasteService {
     // local storage methods
 
     getBoards() {
-        if (typeof window !== 'undefined') {
-            let boards = localStorage.getItem(LOCAL_STORAGE_KEY)
-            let ret = boards ? JSON.parse(boards) : BOARDS;
-            return ret;
-        } else {
-            let ret = BOARDS;
-            return ret;
-        }
+        return new Promise((resolve, reject)=>{
+            if (typeof window !== 'undefined') {
+                if(this.isLoggedIn){
+                    this.getBoardsByUserId().then((resp)=>{
+                        resolve(resp);
+                    })
+                }else{
+                    resolve(this.getBoardsByLocalStorage());
+                }
+            } else {
+                resolve(BOARDS);
+            }
+        })
+    }
+
+    getBoardsByUserId(){
+        let f = new FetchService()
+        let url = '/api/boardsByUserId'
+        return f.doGet(url).then((res)=>{
+            return res.data
+        })
+    }
+
+    getBoardsByLocalStorage(){
+        let boards = localStorage.getItem(LOCAL_STORAGE_KEY)
+        return boards
+            ? JSON.parse(boards)
+            : BOARDS;
     }
 
     setBoards(what) {
@@ -89,7 +113,6 @@ export class CopyPasteService {
         return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
     }
 
-
     generateRandomTitle() {
         return RANDOM_TITLES[this.getRandomIntInclusive()];
     }
@@ -97,7 +120,22 @@ export class CopyPasteService {
     // boards crud
 
     createBoard(title = '') {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                let f = new FetchService();
+                let url = '/api/createboard';
+                let data = {};
+                f.doPost(url, data).then((resp)=>{
+                    resolve(resp);
+                })
+            }else{
+                resolve(this.createBoardLocalStorage(title))
+            }
+        })
 
+    }
+
+    createBoardLocalStorage(title){
         if (!title) {
             title = this.generateRandomTitle();
         }
@@ -113,7 +151,10 @@ export class CopyPasteService {
 
         // write to local storage
         this.setBoards(boards);
+        return this.getBoards()
     }
+
+
 
     readBoard(idx) {
         return this.getBoards()[idx]
@@ -155,6 +196,29 @@ export class CopyPasteService {
         boards[boardIdx].list.splice(boardItemIdx, 1);
         this.setBoards(boards);
         this.dispatchForceReload();
+    }
+
+    // additional methods
+
+    swapBoard(fromBoardIdx, toBoardIdx){
+        let boards = this.getBoards();
+        let from = boards[fromBoardIdx];
+        let to = boards[toBoardIdx];
+        boards[toBoardIdx] = from;
+        boards[fromBoardIdx] = to;
+        this.setBoards(boards);
+        this.dispatchForceReload()
+    }
+
+    swapBoardItem(boardIdx, fromIdx, toIdx){
+        let boards = this.getBoards();
+        let board = boards[boardIdx]
+        let from = board.list[fromIdx];
+        let to = board.list[toIdx];
+        board.list[toIdx] = from;
+        board.list[fromIdx] = to;
+        this.setBoards(boards);
+        this.dispatchForceReload()
     }
 
 }

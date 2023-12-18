@@ -1,6 +1,7 @@
 // layout
 import {useEffect} from "react";
 import Layout from "../components/layout/Layout";
+// import { cookies } from 'next/headers'
 
 // google analytics
 import {GoogleAnalytics, usePageViews} from "nextjs-google-analytics";
@@ -38,7 +39,7 @@ export default function MyApp({
             {/*                 trackPageViews*/}
             {/*                 gaMeasurementId={gaMeasurementId}/>*/}
             <Component {...pageProps}/>
-            {/*<DebugComponent />*/}
+            <DebugComponent />
         </>
     )
 }

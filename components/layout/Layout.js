@@ -28,10 +28,27 @@ export default function Layout({Component, pageProps, children}){
             name: 'home',
             route: '/',
             active: false,
-            title: 'Copy to Clipboard Manager',
+            title: 'Clipboard Manager | Home',
             keywords: '',
             description: '',
-        }
+        },
+        {
+            name: 'signin',
+            route: '/signin',
+            active: false,
+            title: 'Clipboard Manager | Sign In',
+            keywords: '',
+            description: '',
+        },
+        {
+            name: 'signup',
+            route: '/signup',
+            active: false,
+            title: 'Clipboard Manager | Sign Up',
+            keywords: '',
+            description: '',
+        },
+
     ]
     const [currentPage, setCurrentPage] = useState(pages[0]);
 
@@ -103,7 +120,21 @@ export default function Layout({Component, pageProps, children}){
             </Head>
 
             <header className={currentPage.name}>
-
+                <div className={getHeaderClassName()}>
+                    <div className={"row"}>
+                        <div className={"col col-lg-4"}>
+                            <Link href={"/"}>
+                                Clipboard Manager
+                            </Link>
+                        </div>
+                        <div className={"col col-lg-8"}>
+                            <Nav
+                                currentPage={currentPage}
+                                pages={pages}
+                                navClick={handleNavClick} />
+                        </div>
+                    </div>
+                </div>
             </header>
 
             <main className={inter.className}>

@@ -6,7 +6,7 @@ import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
 export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
 
     const service = new CopyPasteService()
-    let newValue = boardItem;
+    let newValue = boardItem.text;
 
     const [wasCopied, setWasCopied] = useState(false);
     const [wasSaved, setWasSaved] = useState(false);
@@ -32,7 +32,7 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
     }
 
     function doCopy(e) {
-        navigator.clipboard.writeText(boardItem)
+        navigator.clipboard.writeText(boardItem.text)
         setWasCopied(true)
         setTimeout(() => {
             setWasCopied(false)
@@ -41,7 +41,7 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
 
     function doOpen(){
         if(isURL()){
-            window.open(boardItem)
+            window.open(boardItem.text)
         }
     }
 
@@ -82,7 +82,7 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
     }
 
     function isURL(){
-        return boardItem.slice(0, 4) === 'http'
+        return boardItem.text.slice(0, 4) === 'http'
     }
 
     function getButtonLinkClassList(){
@@ -94,19 +94,23 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
     }
 
     return (
-        <div className={"row mb-3"}>
+        <div className={"row mb-3 board-item "}
+             id={"board-item-" + boardIdx}
+             data-id={boardItem._id}
+             data-board-idx={boardIdx}
+             data-board-item-idx={boardItemIdx}>
             <div className={"col-auto"}>
                 <button className={"btn btn-danger"}
                         title={"Delete Item"}
                         onClick={onClick}>
-                    <FaX/>
+                    <FaX/> {boardItemIdx}
                 </button>
             </div>
             <div className={"col"}>
                 <input
                     type={"text"}
                     className={"form-control"}
-                    defaultValue={boardItem}
+                    defaultValue={boardItem.text}
                     onChange={onChange}
                     onKeyUp={onKeyUp}
                 />

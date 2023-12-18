@@ -1,14 +1,41 @@
 import BoardItem from "@/components/copyPaste/BoardItem";
 import {CopyPasteService} from "@/services/CopyPasteService";
+import {DragAndDropService} from '@/services/DragAndDropService';
 import {FaSave} from "react-icons/fa";
 import {FaPlus, FaThumbsUp, FaX} from "react-icons/fa6";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 
-export default function Board({board, boardIdx}) {
+export default function Board({board, boardIdx, notifyParent}) {
 
-    const service = new CopyPasteService()
+    const cpService = new CopyPasteService()
+    let dndService = null;
+
     const [wasSaved, setWasSaved] = useState(false)
     let newValue = board.title;
+
+    useEffect(()=>{
+
+        console.log('board.js:useEffect')
+        let customEvent = new CustomEvent('test');
+        notifyParent(customEvent);
+
+        dndService = new DragAndDropService({
+            dragSelectors: `#board-${boardIdx} .board-item`,
+            dropSelectors: `#board-${boardIdx} .board-item`,
+            onDrop: (obj)=> {
+                let boardIdx = obj.dragElement.dataset.boardIdx;
+                let fromIdx = obj.dragElement.dataset.boardItemIdx;
+                let toIdx = obj.dropElement.dataset.boardItemIdx;
+                cpService.swapBoardItem(boardIdx, fromIdx, toIdx);
+            }
+        });
+
+        console.log('useEffect', dndService)
+    }, [])
+
+    function handleOnDrop(){
+        console.log()
+    }
 
     function renderBoardItems() {
         return board.list.map((boardItem, idx) => {
@@ -22,13 +49,13 @@ export default function Board({board, boardIdx}) {
 
     function onClick() {
         console.log('onclick:boardIdx', boardIdx)
-        service.createBoardItem('', boardIdx);
+        cpService.createBoardItem('', boardIdx);
     }
 
     function confirmDeleteBoard() {
         let conf = confirm('are you sure you want to delete this board');
         if (conf) {
-            service.deleteBoard(boardIdx)
+            cpService.deleteBoard(boardIdx)
         }
     }
 
@@ -45,7 +72,7 @@ export default function Board({board, boardIdx}) {
 
     function save() {
 
-        service.updateBoard(boardIdx, newValue)
+        cpService.updateBoard(boardIdx, newValue)
         setWasSaved(true)
         setTimeout(() => {
             setWasSaved(false)
@@ -62,14 +89,15 @@ export default function Board({board, boardIdx}) {
         } else {
             return (
                 <>
-
                 </>
             )
         }
     }
 
     return (
-        <div className={"col-12 col-md-6 col-lg-4 mb-3"}>
+        <div className={"col-12 col-md-6 col-lg-4 mb-3 board"}
+             id={"board-" + boardIdx}
+             data-board-idx={boardIdx}>
             <div className={"card"}>
                 <div className={"card-header"}>
                     <div className={"row g-2"}>
