@@ -34,10 +34,7 @@ export default function Index({defaultBoards, isLoggedIn}) {
             }, 1)
         })
 // console.log('boards', service.getBoards())
-        service.getBoards().then((resp)=>{
-            console.log('boards:resp', resp);
-            setBoards(resp);
-        })
+        loadBoards()
         // setBoards(service.getBoards())
 
         // dndService = new DragAndDropService({
@@ -66,6 +63,8 @@ export default function Index({defaultBoards, isLoggedIn}) {
             return boards.map((board, idx) => {
                 return (
                     <Board
+                        isLoggedIn={isLoggedIn}
+                        loadBoards={loadBoards}
                         notifyParent={notifyParent}
                         key={idx}
                         boardIdx={idx}
@@ -85,6 +84,14 @@ export default function Index({defaultBoards, isLoggedIn}) {
                 service.swapBoard(fromBoardIdx, toBoardIdx);
             }
         });
+    }
+
+    function loadBoards(){
+        console.log('loadBoards')
+        service.getBoards().then((resp)=>{
+            console.log('boards:resp', resp);
+            setBoards(resp);
+        })
     }
 
     function test() {

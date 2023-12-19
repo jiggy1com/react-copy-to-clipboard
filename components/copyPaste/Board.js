@@ -2,14 +2,17 @@ import BoardItem from "@/components/copyPaste/BoardItem";
 import {CopyPasteService} from "@/services/CopyPasteService";
 import {DragAndDropService} from '@/services/DragAndDropService';
 import {FaSave} from "react-icons/fa";
-import {FaPlus, FaThumbsUp, FaX} from "react-icons/fa6";
+import {FaPlus, FaSpinner, FaThumbsUp, FaX} from "react-icons/fa6";
 import {useEffect, useState} from "react";
+import {UserService} from "@/services/UserService";
 
-export default function Board({board, boardIdx, notifyParent}) {
+export default function Board({board, boardIdx, notifyParent, isLoggedIn, loadBoards}) {
 
-    const cpService = new CopyPasteService()
+    const boardId = board._id;
+    const cpService = new CopyPasteService(isLoggedIn)
     let dndService = null;
 
+    const [saving, setSaving] = useState(false);
     const [wasSaved, setWasSaved] = useState(false)
     let newValue = board.title;
 
@@ -41,21 +44,34 @@ export default function Board({board, boardIdx, notifyParent}) {
         return board.list.map((boardItem, idx) => {
             return <BoardItem
                 key={idx}
+                loadBoards={loadBoards}
+                isLoggedIn={isLoggedIn}
+                boardId={boardId}
                 boardIdx={boardIdx}
                 boardItemIdx={idx}
                 boardItem={boardItem}/>
         })
     }
 
-    function onClick() {
+    function createBoardItem() {
         console.log('onclick:boardIdx', boardIdx)
-        cpService.createBoardItem('', boardIdx);
+        let payload = {
+            item: '',
+            boardIdx: boardIdx,
+            boardId: boardId,
+        }
+        cpService.createBoardItem(payload).then((res)=>{
+            console.log('cpService.createBoardItem', res)
+            loadBoards()
+        });
     }
 
     function confirmDeleteBoard() {
-        let conf = confirm('are you sure you want to delete this board');
+        let conf = confirm('Are you sure you want to delete this board?');
         if (conf) {
-            cpService.deleteBoard(boardIdx)
+            cpService.deleteBoard({boardId, boardIdx}).then(()=>{
+                loadBoards()
+            })
         }
     }
 
@@ -71,56 +87,76 @@ export default function Board({board, boardIdx, notifyParent}) {
     }
 
     function save() {
+        document.querySelector('#save-' + boardId).blur()
+        if(!saving){
+            setSaving(true);
+            cpService.updateBoard({boardId, boardIdx, newValue}).then(()=>{
 
-        cpService.updateBoard(boardIdx, newValue)
-        setWasSaved(true)
-        setTimeout(() => {
-            setWasSaved(false)
-        }, 1000)
+                setSaving(false);
+                setWasSaved(true)
+                setTimeout(() => {
+                    setWasSaved(false)
+                }, 1500)
+            })
+        }
+
     }
 
-    function renderWasSaved() {
-        if (wasSaved) {
+    function renderSaveIcon(){
+        if(saving){
             return (
-                <span className={"ml-2"}>
-                    <FaThumbsUp/>
-                </span>
+                <FaSpinner />
             )
-        } else {
+        }else if(wasSaved){
             return (
-                <>
-                </>
+                <FaThumbsUp />
+            )
+        } else{
+            return (
+                <FaSave />
             )
         }
+    }
+
+    function getInputClassList(){
+        let classList = 'form-control ';
+        if(saving){
+            classList += 'border-warning'
+        }else if(wasSaved){
+            classList += 'border-success';
+        } else{
+
+        }
+        return classList;
     }
 
     return (
         <div className={"col-12 col-md-6 col-lg-4 mb-3 board"}
              id={"board-" + boardIdx}
+             data-board-id={boardId}
              data-board-idx={boardIdx}>
             <div className={"card"}>
                 <div className={"card-header"}>
                     <div className={"row g-2"}>
                         <div className={"col"}>
                             <input type={"text"}
-                                   className={"form-control"}
+                                   className={getInputClassList()}
                                    name={"title"}
                                    defaultValue={board.title}
                                    onKeyUp={onKeyUp}
                                    onChange={onChange}/>
                         </div>
                         <div className={"col-auto"}>
-                            <button className={"btn btn-primary"}
+                            <button id={"save-" + boardId} className={"btn btn-primary"}
                                     title={"Save"}
                                     onClick={save}>
-                                <FaSave/>
+                                {renderSaveIcon()}
                             </button>
-                            {renderWasSaved()}
                         </div>
                         <div className={"col-auto"}>
                             <button className={"btn btn-primary float-right"}
                                     title={"Add Item"}
-                                    onClick={onClick}>
+                                    onClick={createBoardItem}>
                                 <FaPlus/>
                             </button>
                         </div>
@@ -140,3 +176,12 @@ export default function Board({board, boardIdx, notifyParent}) {
         </div>
     )
 }
+
+// export async function getServerSideProps({req}){
+//     let userService = new UserService(req);
+//     return {
+//         props:{
+//             isLoggedIn: userService.isLoggedIn()
+//         }
+//     }
+// }

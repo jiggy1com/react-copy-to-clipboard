@@ -1,5 +1,10 @@
 import clientPromise from "@/lib/mongodb";
 import {hashPassword} from "@/services/StringHelpers";
+import {ObjectId} from "mongodb";
+
+// TODO: rename boards to board
+// const BOARDS = 'boards';
+// const BOARD_ITEM = 'boardItem';
 
 const BOARD = {
     order: 0,
@@ -92,13 +97,16 @@ export class MongoDBService {
     // helpers
     getNewBoard(title=''){
         return Object.assign(BOARD, {
+            _id: new ObjectId(),
             title: title,
-            userId: this.userId
+            userId: this.userId,
+            list: []
         })
     }
 
     getNewBoardItem(text=''){
         return Object.assign(BOARD_ITEM,{
+            _id: new ObjectId(),
             userId: this.userId,
             text: text
         })
@@ -110,19 +118,30 @@ export class MongoDBService {
             return this.connect().then((db)=>{
                 let boardData = this.getNewBoard(title)
                 return db.collection('boards').insertOne(boardData).then((boardRecord)=>{
-                    boardRecord = {_id: boardRecord.insertedId, ...boardData};
-                    boardRecord.list.push(boardItem.insertedId)
+                    // boardRecord = {_id: boardRecord.insertedId, ...boardData};
+                    // boardRecord.list.push(boardItem.insertedId)
                     console.log('boardRecord', boardRecord);
+                    let query = {
+                        _id: new ObjectId(boardRecord.insertedId)
+                    }
                     let update = {
-                        $set: {
-                            list: boardRecord.list
+                        $push: {
+                            list: boardItem.insertedId
                         }
                     }
-                    return db.collection('boards').updateOne({_id: boardRecord._id}, update).then((updatedBoard)=>{
+                    let options = {
+                        returnNewDocument: true
+                    }
+                    return db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
                         return this.getBoardsByUserId(this.userId).then((boards)=>{
                             return boards;
-                        });
+                        })
                     })
+                    // return db.collection('boards').updateOne({_id: boardRecord._id}, update).then((updatedBoard)=>{
+                    //     return this.getBoardsByUserId(this.userId).then((boards)=>{
+                    //         return boards;
+                    //     });
+                    // })
                 })
             })
         });
@@ -153,27 +172,102 @@ export class MongoDBService {
         })
     }
 
-    readBoard() {
+    readBoardById(_id) {
+        let query = {
+            _id: _id,
+            userId: this.userId,
+        }
         return this.connect().then((db) => {
-            return db.collection('test')
-                .find({})
+            return db.collection('boards')
+                .find(query)
                 .toArray()
         });
     }
 
-    updateBoard() {
-
+    updateBoard({boardId, userId, newValue}) {
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    _id: new ObjectId(boardId),
+                    userId
+                };
+                let update = {
+                    $set: {
+                        title: newValue
+                    }
+                }
+                let options = {
+                    returnDocument: 'after'
+                }
+                db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                    console.log('updateBoard:doc', doc);
+                    resolve(doc);
+                }).catch((err)=>{
+                    reject(err);
+                })
+            })
+        })
     }
 
-    deleteBoard() {
+    deleteBoard({boardId, userId}) {
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    _id: new ObjectId(boardId),
+                    userId: userId
+                }
+                let options = {
 
+                }
+                db.collection('boards').findOneAndDelete(query, options).then((doc)=>{
+                    console.log('deleteBoard:doc', doc);
+                    resolve();
+                })
+            })
+        })
     }
 
     // board item crud
-    createBoardItem(item=null) {
+    // TODO: find usages, and repair
+    createBoardItem({item = ''}) {
         let boardItem = this.getNewBoardItem(item)
         return this.connect().then((db)=>{
             return db.collection('boardItem').insertOne(boardItem);
+        })
+    }
+
+    addBoardItemToBoard({_id, text}){
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+
+                let boardItem = this.getNewBoardItem(text);
+                let options = {
+
+                }
+                console.log('boardItem', boardItem);
+                db.collection('boardItem').insertOne(boardItem).then((boardItem)=>{
+
+                    let query = {
+                        _id: new ObjectId(_id),
+                    }
+                    let update = {
+                        $push: {
+                            list: boardItem.insertedId
+                        }
+                    }
+                    let options = {
+                        returnNewDocument: true
+                    }
+
+                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                        console.log('addBoardToItem:doc', doc)
+                        resolve(doc)
+                        // return doc;
+                    })
+
+                })
+
+            })
         })
     }
 
@@ -181,12 +275,60 @@ export class MongoDBService {
 
     }
 
-    updateBoardItem() {
-
+    updateBoardItem({boardItemId, newValue}) {
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    _id: new ObjectId(boardItemId)
+                }
+                let update = {
+                    $set: {
+                        text: newValue
+                    }
+                }
+                let options = {
+                    returnNewDocument: true
+                }
+                db.collection('boardItem').findOneAndUpdate(query, update, options).then((doc)=>{
+                    console.log('doc', doc);
+                    resolve(doc);
+                })
+            })
+        })
     }
 
-    deleteBoardItem() {
+    deleteBoardItem({boardId, boardItemId}) {
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    _id: new ObjectId(boardItemId),
+                    userId: this.userId
+                }
+                // delete board item
+                db.collection('boardItem').deleteOne(query).then((result)=>{
+                    console.log('deleteBoardItem:result', result);
 
+                    // find board and pull board item
+                    let query = {
+                        _id: new ObjectId(boardId),
+                        userId: this.userId
+                    }
+                    let update = {
+                        $pull: {
+                            list: new ObjectId(boardItemId)
+                        }
+                    }
+                    let options = {
+                        returnDocument: 'after',
+                    }
+                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                        console.log('deleteBoardItem:doc', doc);
+                        resolve(doc);
+                    })
+                })
+            })
+        })
     }
+
 
 }

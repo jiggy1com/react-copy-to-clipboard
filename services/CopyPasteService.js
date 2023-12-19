@@ -32,7 +32,7 @@ export class CopyPasteService {
 
     constructor(isLoggedIn) {
         this.isLoggedIn = isLoggedIn;
-        this.boards = this.getBoards();
+        this.boards = [] //this.getBoards();
         this.createDispatcher();
     }
 
@@ -160,13 +160,56 @@ export class CopyPasteService {
         return this.getBoards()[idx]
     }
 
-    updateBoard(boardIdx, title) {
+    updateBoard({boardId, boardIdx, newValue}) {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.updateBoardMongoDb({boardId, newValue}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.updateBoardLocalStorage({boardIdx, newValue})
+                resolve()
+            }
+        })
+    }
+
+    updateBoardMongoDb({boardId, newValue}){
+        let f = new FetchService()
+        let url = '/api/updateBoard';
+        let data = {boardId, newValue}
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    updateBoardLocalStorage({boardIdx}){
         let boards = this.getBoards()
         boards[boardIdx].title = title;
         this.setBoards(boards);
     }
 
-    deleteBoard(boardIdx) {
+    deleteBoard({boardId, boardIdx}) {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.deleteBoardMongoDb({boardId}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.deleteBoardLocalStorage({boardIdx});
+            }
+        })
+    }
+
+    deleteBoardMongoDb({boardId}){
+        let f = new FetchService();
+        let url = '/api/deleteBoard';
+        let data = {boardId}
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    deleteBoardLocalStorage({boardIdx}){
         let boards = this.getBoards()
         boards.splice(boardIdx, 1)
         this.setBoards(boards);
@@ -175,23 +218,95 @@ export class CopyPasteService {
 
     // lists crud
 
-    createBoardItem(item, where) {
+    createBoardItem({item, boardIdx, boardId}) {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.createBoardItemMongoDB({item, boardId}).then((doc)=>{
+                    console.log('createBoardItem:doc', doc);
+                    resolve(doc);
+                });
+            }else{
+                this.createBoardItemLocalStorage(item, boardIdx)
+                resolve()
+            }
+        })
+    }
+
+    createBoardItemMongoDB({item, boardId}){
+        let f = new FetchService();
+        let url = '/api/createBoardItem'
+        let data = {
+            item: item,
+            _id: boardId,
+        }
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    createBoardItemLocalStorage(item, where){
         let boards = this.getBoards();
         boards[where].list.push(item);
         this.setBoards(boards);
+
     }
 
     readList() {
 
     }
 
-    updateBoardItem(boardIdx, boardItemIdx, value) {
+    updateBoardItem({boardId, boardItemId, boardIdx, boardItemIdx, newValue}) {
+        let f = new FetchService();
+        let url = '/api/updateBoardItem'
+        let data = {
+            boardItemId,
+            newValue,
+        }
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    updateBoardItemMongoDb({boardItemId, newValue}){
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                db.collection('')
+            })
+        })
+    }
+
+    updateBoardItemLocalStorage(){
         let boards = this.getBoards()
-        boards[boardIdx].list[boardItemIdx] = value;
+        boards[boardIdx].list[boardItemIdx] = newValue;
         this.setBoards(boards);
     }
 
-    deleteBoardItem(boardIdx, boardItemIdx) {
+    deleteBoardItem({boardId, boardItemId, boardIdx, boardItemIdx}) {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.deleteBoardItemMongoDb({boardId, boardItemId}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.deleteBoardItemLocalStorage({boardIdx, boardItemIdx})
+                resolve()
+            }
+        })
+    }
+
+    deleteBoardItemMongoDb({boardId, boardItemId}){
+        let f = new FetchService()
+        let url = '/api/deleteBoardItem'
+        let data = {
+            boardId,
+            boardItemId
+        }
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        });
+    }
+
+    deleteBoardItemLocalStorage({boardIdx, boardItemIdx}){
         let boards = this.getBoards()
         boards[boardIdx].list.splice(boardItemIdx, 1);
         this.setBoards(boards);

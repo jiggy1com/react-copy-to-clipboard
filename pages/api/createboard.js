@@ -19,7 +19,7 @@ export default function CreateBoard(req, res){
         })
     }
 
-    mongodbService.createBoard().then((resp)=>{
+    return mongodbService.createBoard().then((resp)=>{
         res.status(200).json({
             success: true,
             data: resp,

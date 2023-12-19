@@ -2,6 +2,9 @@ import {MongoDBService} from "@/services/MongoDBService";
 
 const service = new MongoDBService();
 
+// TESTING ONLY
+// OK TO DELETE OR UPDATE
+
 export default async (req, res) => {
 
     let title = req.body.title ?? 'welcome'
