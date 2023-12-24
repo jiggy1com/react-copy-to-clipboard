@@ -1,33 +1,53 @@
 import {MongoDBService} from "@/services/MongoDBService";
+import {EncryptionService} from "@/services/EncryptionService";
+import Cookies from "cookies";
+import {USERID} from "@/services/AppService";
 
 const service = new MongoDBService();
 
-// TESTING ONLY
-// OK TO DELETE OR UPDATE
-
 export default async (req, res) => {
 
-    let title = req.body.title ?? 'welcome'
+    try{
 
-    service.createBoard(title).then(() => {
+        let mongodbService = new MongoDBService();
+        let encryptionService = new EncryptionService();
+        let cookieUserId = req.body.cookieUserId //Cookies(req).get(USERID)
 
-    })
-    service.readBoard().then((resp) => {
-        res.json(resp);
-    });
-    // try {
-    //     const client = await clientPromise;
-    //     const db = client.db(DB);
-    //
-    //     const test = await db
-    //         .collection("test")
-    //         .find({})
-    //         .sort({ metacritic: -1 })
-    //         .limit(10)
-    //         .toArray();
-    //
-    //     res.json(test);
-    // } catch (e) {
-    //     console.error(e);
-    // }
+        let userId = encryptionService.decrypt(cookieUserId);
+        mongodbService.setUserId(userId);
+
+        if(!cookieUserId){
+            res.status(200).json({
+                success: false,
+                message: 'User is not logged in.',
+                data: []
+            })
+        }
+
+        let payload = {
+            _id: req.body._id,
+        }
+
+        mongodbService.getBoardByUserId(payload).then((resp)=>{
+            res.status(200).json({
+                success: true,
+                data: resp,
+            })
+        }).catch((err)=>{
+            res.status(200).json({
+                success: false,
+                err: err
+            })
+        })
+
+    }catch(err){
+        console.log('CATCH:ERR', err)
+        res.status(200).json({
+            success: false,
+            message: err.message
+        })
+    }
+
+
+
 };

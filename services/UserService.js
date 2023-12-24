@@ -1,5 +1,6 @@
 
 import Cookies from "cookies";
+import {USERID} from "@/services/AppService";
 
 export class UserService{
     constructor(req=null) {
@@ -12,7 +13,7 @@ export class UserService{
     }
 
     isLoggedIn(){
-        return this.getManager().get('userId')
+        return this.getManager().get(USERID) ?? null
     }
 
 }

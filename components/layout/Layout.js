@@ -9,14 +9,16 @@ import {HeaderComponent} from "./HeaderComponent";
 import {FooterComponent} from "./FooterComponent";
 
 // fonts
-import {Manrope, Open_Sans} from "next/font/google";
+import {Manrope, Open_Sans, Ubuntu_Mono} from "next/font/google";
 import {ServerService} from "services/ServerService";
 import {BreakpointService} from "services/BreakpointService";
 import {ResizeService} from "services/ResizeService";
 import Link from "next/link";
-const inter = Manrope({
-    subsets: ['latin']
-});
+import H1Component from "@/components/text/H1Component";
+// const inter = Manrope({
+//     subsets: ['latin']
+// });
+const inter = Ubuntu_Mono({ subsets: ['latin'], weight: '400' });
 
 export default function Layout({Component, pageProps, children}){
 
@@ -25,29 +27,40 @@ export default function Layout({Component, pageProps, children}){
     const router = useRouter()
     const pages = [
         {
-            name: 'home',
+            name: 'Home',
             route: '/',
             active: false,
             title: 'Clipboard Manager | Home',
-            keywords: '',
-            description: '',
+            keywords: 'home',
+            description: 'home',
         },
         {
-            name: 'signin',
+            name: 'Sign In',
             route: '/signin',
             active: false,
             title: 'Clipboard Manager | Sign In',
             keywords: '',
             description: '',
+            requireAuth: false,
         },
         {
-            name: 'signup',
+            name: 'Create Account',
             route: '/signup',
             active: false,
             title: 'Clipboard Manager | Sign Up',
             keywords: '',
             description: '',
+            requireAuth: false,
         },
+        {
+            name: 'Sign Out',
+            route: '/signout',
+            active: false,
+            title: '',
+            keywords: '',
+            description: '',
+            requireAuth: true,
+        }
 
     ]
     const [currentPage, setCurrentPage] = useState(pages[0]);
@@ -115,31 +128,38 @@ export default function Layout({Component, pageProps, children}){
                 <meta charSet="utf-8" />
                 <meta name={"keywords"} content={currentPage.keywords} />
                 <meta name={"description"} content={currentPage.description} />
-
+                <link href={"https://site1.admin.meanwebapp.com/themes/flatly.css"} type={"text/css"} />
                 {/*trackPageViews*/}
             </Head>
 
-            <header className={currentPage.name}>
-                <div className={getHeaderClassName()}>
-                    <div className={"row"}>
-                        <div className={"col col-lg-4"}>
-                            <Link href={"/"}>
-                                Clipboard Manager
-                            </Link>
-                        </div>
-                        <div className={"col col-lg-8"}>
-                            <Nav
-                                currentPage={currentPage}
-                                pages={pages}
-                                navClick={handleNavClick} />
-                        </div>
-                    </div>
-                </div>
-            </header>
+            <HeaderComponent>
+                <Nav
+                    currentPage={currentPage}
+                    pages={pages}
+                    navClick={handleNavClick} />
+            </HeaderComponent>
+
+            {/*<header className={currentPage.name}>*/}
+            {/*    <div className={getHeaderClassName()}>*/}
+            {/*        <div className={"row"}>*/}
+            {/*            <div className={"col col-lg-4"}>*/}
+            {/*                <H1Component>*/}
+            {/*                <Link href={"/"}>*/}
+            {/*                    Clipboard Manager*/}
+            {/*                </Link>*/}
+            {/*                </H1Component>*/}
+            {/*            </div>*/}
+            {/*            <div className={"col col-lg-8"}>*/}
+            {/*                */}
+            {/*            </div>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</header>*/}
 
             <main className={inter.className}>
                 {children}
             </main>
+
             <FooterComponent />
         </>
     )

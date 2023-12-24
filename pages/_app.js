@@ -30,6 +30,7 @@ export default function MyApp({
 
     useEffect(() => {
         require("bootstrap/dist/js/bootstrap.bundle.min.js");
+
     }, []);
 
     return getLayout(

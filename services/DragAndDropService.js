@@ -150,8 +150,10 @@ export class DragAndDropService {
         let ret;
         if(element){
             if(element.classList.contains('droppable')){
+                console.log('should be returning droppable 1')
                 ret = element
             }else{
+                console.log('should be returning droppable 2')
                 ret = element.closest('.droppable')
             }
             return ret;
@@ -163,7 +165,7 @@ export class DragAndDropService {
         return
     }
 
-    isDroppable(canDropHere,elementBeingDragged){
+    isDroppable(canDropHere, elementBeingDragged){
         // console.log('isDroppable: check here', canDropHere, 'dragging:', elementBeingDragged, 'service-dragging:', this.elementBeingDragged)
         let found = false;
         this.dropSelectors.forEach((el)=>{
@@ -259,12 +261,14 @@ export class DragAndDropService {
     }
 
     onDrop(e) {
+        console.log('DragAndDropService:onDrop', e);
         const data = e.dataTransfer.getData("application/my-app");
         const elementBeingDragged = this.elementBeingDragged;
-        this.elementBeingDragged = null;
+        // this.elementBeingDragged = null;
         // e.target.appendChild(document.getElementById(data));
         let el = this.getClosestDroppable(e.target);
         if(this.isDroppable(el)){
+            console.log('isDroppable', el)
 
             let obj = {
                 dragElement: elementBeingDragged,
@@ -273,6 +277,7 @@ export class DragAndDropService {
 
             // UDF
             if (typeof this.onDropHandler === 'function') {
+                console.log('calling drop handler', obj, this.onDropHandler, this)
                 this.onDropHandler(obj)
             }
         }

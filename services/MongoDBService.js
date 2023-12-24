@@ -1,20 +1,26 @@
 import clientPromise from "@/lib/mongodb";
 import {hashPassword} from "@/services/StringHelpers";
 import {ObjectId} from "mongodb";
+import {generateRandomTitle, MONGODB_DATABASE} from "@/services/AppService";
+
 
 // TODO: rename boards to board
 // const BOARDS = 'boards';
 // const BOARD_ITEM = 'boardItem';
 
 const BOARD = {
+    // _id,
     order: 0,
     title: '',
-    list: []
+    list: [],
+    userId: null,
 }
 
 const BOARD_ITEM = {
+    // _id,
     type: 'text',
-    text: ''
+    text: '',
+    userId: null
 }
 
 
@@ -22,7 +28,7 @@ const BOARD_ITEM = {
 export class MongoDBService {
 
     constructor(userId) {
-        this.databaseName = 'clipboardmanager';
+        this.databaseName = MONGODB_DATABASE;
         this.userId = null;
     }
 
@@ -95,56 +101,59 @@ export class MongoDBService {
     }
 
     // helpers
-    getNewBoard(title=''){
+    getNewBoard(){
         return Object.assign(BOARD, {
             _id: new ObjectId(),
-            title: title,
+            order: 0,
+            title: generateRandomTitle(),
             userId: this.userId,
             list: []
         })
     }
 
-    getNewBoardItem(text=''){
+    getNewBoardItem(text='', order = 0){
         return Object.assign(BOARD_ITEM,{
             _id: new ObjectId(),
+            order: order,
             userId: this.userId,
             text: text
         })
     }
 
     // board crud
-    createBoard(title = 'Board Name') {
-        return this.createBoardItem('Board Item').then((boardItem)=>{
-            return this.connect().then((db)=>{
-                let boardData = this.getNewBoard(title)
-                return db.collection('boards').insertOne(boardData).then((boardRecord)=>{
-                    // boardRecord = {_id: boardRecord.insertedId, ...boardData};
-                    // boardRecord.list.push(boardItem.insertedId)
-                    console.log('boardRecord', boardRecord);
+    createBoard() {
+        return new Promise((resolve, reject)=>{
+            this.createBoardItem().then((boardItem)=>{
+                this.connect().then((db)=>{
                     let query = {
-                        _id: new ObjectId(boardRecord.insertedId)
+                        userId: this.userId
                     }
-                    let update = {
-                        $push: {
-                            list: boardItem.insertedId
-                        }
-                    }
-                    let options = {
-                        returnNewDocument: true
-                    }
-                    return db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
-                        return this.getBoardsByUserId(this.userId).then((boards)=>{
-                            return boards;
+                    db.collection('boards').find(query).toArray().then((boards)=>{
+                        let boardData = this.getNewBoard();
+                        boardData.order = boards.length;
+                        db.collection('boards').insertOne(boardData).then((boardRecord)=>{
+                            console.log('boardRecord', boardRecord);
+                            let query = {
+                                _id: new ObjectId(boardRecord.insertedId)
+                            }
+                            let update = {
+                                $push: {
+                                    list: boardItem.insertedId
+                                }
+                            }
+                            let options = {
+                                returnNewDocument: true
+                            }
+                            db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                                this.getBoardsByUserId(this.userId).then((boards)=>{
+                                    resolve(boards)
+                                })
+                            })
                         })
                     })
-                    // return db.collection('boards').updateOne({_id: boardRecord._id}, update).then((updatedBoard)=>{
-                    //     return this.getBoardsByUserId(this.userId).then((boards)=>{
-                    //         return boards;
-                    //     });
-                    // })
                 })
-            })
-        });
+            });
+        })
     }
 
     getBoardsByUserId(userId){
@@ -156,8 +165,8 @@ export class MongoDBService {
                     },
                 },
                 {
-                    $sort: {
-                        order: 1
+                    $unwind: {
+                        path: '$list'
                     }
                 },
                 {
@@ -165,24 +174,85 @@ export class MongoDBService {
                         from: 'boardItem',
                         localField: 'list',
                         foreignField: '_id',
-                        as: 'list'
+                        as: 'list',
                     }
-                }
+                },
+                {
+                    $unwind: '$list'
+                },
+                {
+                    $group: {
+                        _id: "$_id",
+                        userId: {$first:"$userId"},
+                        title: {"$first": "$title"},
+                        order: {"$first": "$order"},
+                        list: {
+                            $push: "$list"
+                        }
+                    }
+                },
+                {
+                    $project:{
+                        _id: 1,
+                        userId: 1,
+                        title: 1,
+                        order: 1,
+                        list: 1,
+                    }
+                },
+                {
+                    $sort: {
+                        order: 1
+                    }
+                },
             ]).toArray()
         })
     }
 
-    readBoardById(_id) {
-        let query = {
-            _id: _id,
-            userId: this.userId,
-        }
-        return this.connect().then((db) => {
-            return db.collection('boards')
-                .find(query)
-                .toArray()
-        });
+    getBoardByUserId({_id}){
+        let foundBoard = null;
+        return new Promise((resolve, reject)=>{
+            this.getBoardsByUserId(this.userId).then((boards)=>{
+                boards.forEach((board)=>{
+                    if(board._id.toString() === _id){
+                        foundBoard = board;
+                        // resolve(board)
+                    }
+                })
+                if(foundBoard){
+                    resolve(foundBoard)
+                }else{
+                    reject(foundBoard)
+                }
+            }).catch((err)=>{
+                resolve(err)
+            })
+
+            // let query = {
+            //     _id: new ObjectId(_id),
+            //     userId: this.userId
+            // }
+            // console.log('query', query);
+            // this.connect().then((db)=>{
+            //     db.collection('boards').findOne(query).then((board)=>{
+            //         console.log('board', board);
+            //         resolve(board)
+            //     })
+            // })
+        })
     }
+
+    // readBoardById(_id) {
+    //     let query = {
+    //         _id: _id,
+    //         userId: this.userId,
+    //     }
+    //     return this.connect().then((db) => {
+    //         return db.collection('boards')
+    //             .find(query)
+    //             .toArray()
+    //     });
+    // }
 
     updateBoard({boardId, userId, newValue}) {
         return new Promise((resolve, reject)=>{
@@ -229,8 +299,8 @@ export class MongoDBService {
 
     // board item crud
     // TODO: find usages, and repair
-    createBoardItem({item = ''}) {
-        let boardItem = this.getNewBoardItem(item)
+    createBoardItem() {
+        let boardItem = this.getNewBoardItem(generateRandomTitle(), 0)
         return this.connect().then((db)=>{
             return db.collection('boardItem').insertOne(boardItem);
         })
@@ -239,34 +309,35 @@ export class MongoDBService {
     addBoardItemToBoard({_id, text}){
         return new Promise((resolve, reject)=>{
             this.connect().then((db)=>{
-
-                let boardItem = this.getNewBoardItem(text);
-                let options = {
-
+                let query = {
+                    _id: new ObjectId(_id),
+                    userId: this.userId,
                 }
-                console.log('boardItem', boardItem);
-                db.collection('boardItem').insertOne(boardItem).then((boardItem)=>{
+                db.collection('boards').find(query).toArray().then((board) => {
+                    let boardItem = this.getNewBoardItem(text);
+                        boardItem.order = board[0].list.length;
+                    let options = {}
+                    db.collection('boardItem').insertOne(boardItem).then((boardItem)=>{
 
-                    let query = {
-                        _id: new ObjectId(_id),
-                    }
-                    let update = {
-                        $push: {
-                            list: boardItem.insertedId
+                        let query = {
+                            _id: new ObjectId(_id),
                         }
-                    }
-                    let options = {
-                        returnNewDocument: true
-                    }
+                        let update = {
+                            $push: {
+                                list: boardItem.insertedId
+                            }
+                        }
+                        let options = {
+                            returnNewDocument: true
+                        }
 
-                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
-                        console.log('addBoardToItem:doc', doc)
-                        resolve(doc)
-                        // return doc;
+                        db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                            console.log('addBoardToItem:doc', doc)
+                            resolve(doc)
+                        })
+
                     })
-
                 })
-
             })
         })
     }
@@ -329,6 +400,87 @@ export class MongoDBService {
             })
         })
     }
+
+    swapBoard({userId, fromBoardId, toBoardId, fromBoardIdx, toBoardIdx}){
+        let query = {userId}
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let Boards = db.collection('boards');
+                Boards.find(query).toArray().then((boards)=>{
+
+                }).then(()=>{
+                    this.getBoardsByUserId(userId).then((boards)=>{
+                        boards.forEach((board, idx)=> {
+                            let order = idx;
+                            console.log('order', order, board._id, fromBoardId)
+                            if(board._id.toString() === fromBoardId){
+                                console.log('override:order:1:', toBoardIdx)
+                                order = parseInt(toBoardIdx)
+                            }
+                            if(board._id.toString() === toBoardId){
+                                console.log('override:order:2:', fromBoardIdx)
+                                order = parseInt(fromBoardIdx)
+                            }
+                            let query = {_id: board._id}
+                            let update = {
+                                $set: {
+                                    order: order
+                                }
+                            }
+                            let options = {
+                                returnDocument: 'after'
+                            }
+                            Boards.findOneAndUpdate(query, update, options).then((updatedDoc)=>{
+                                console.log('updatedDoc', updatedDoc)
+                                resolve()
+                            })
+                        })
+
+                    })
+
+                })
+            })
+        })
+    }
+
+    swapBoardItem({userId, boardId, fromId, toId, fromIdx, toIdx}){
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    userId,
+                    _id: new ObjectId(boardId)
+                }
+                db.collection('boards').findOne(query).then((doc)=>{
+                    console.log('doc', doc);
+
+                    let list = doc.list;
+                    let from = list[fromIdx]
+                    let to = list[toIdx]
+                    list[toIdx] = from;
+                    list[fromIdx] = to;
+
+                    let update = {
+                        $set: {
+                            list: list
+                        }
+                    }
+                    let options = {
+                        returnDocument: 'after'
+                    }
+
+                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                        console.log('updated:doc', doc);
+                        resolve(doc)
+                    })
+
+
+                })
+
+            })
+        })
+    }
+
+
 
 
 }

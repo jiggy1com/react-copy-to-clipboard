@@ -1,46 +1,50 @@
 import {CopyPasteService} from "@/services/CopyPasteService";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import {FaSpinner, FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
 import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
 
-export default function BoardItem({boardId, boardIdx, boardItem, boardItemIdx, isLoggedIn, loadBoards}) {
+export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, boardItemIdx, isLoggedIn, loadBoards, notifyParent, setupDragAndDrop}) {
 
     const service = new CopyPasteService(isLoggedIn)
-    let newValue = boardItem.text;
 
+    const [currentValue, setCurrentValue] = useState(boardItem.text);
+    const [newValue, setNewValue] = useState(boardItem.text);
     const [wasCopied, setWasCopied] = useState(false);
     const [saving, setSaving] = useState(false);
     const [wasSaved, setWasSaved] = useState(false);
+
+    useEffect(()=>{
+        console.log('boardItem:useEffect')
+        setupDragAndDrop()
+    }, [])
 
     function deleteBoardItem() {
         let conf = confirm('Are you sure you want to delete this item?')
         if (conf) {
             service.deleteBoardItem({boardId, boardItemId: boardItem._id, boardIdx, boardItemIdx}).then(()=>{
-                console.log('should be loadBoards')
                 loadBoards()
             })
-        } else {
-            console.log('do not delete')
         }
     }
 
     function onChange(e) {
-        newValue = e.target.value;
+        setNewValue(e.target.value)
     }
 
     function onKeyUp(e) {
         if (e.key === 'Enter') {
-            newValue = e.target.value;
+            setNewValue(e.target.value)
             save()
         }
     }
 
     function doCopy(e) {
-        navigator.clipboard.writeText(boardItem.text)
-        setWasCopied(true)
-        setTimeout(() => {
-            setWasCopied(false)
-        }, 1000)
+        navigator.clipboard.writeText(currentValue.toString()).then(()=>{
+            setWasCopied(true)
+            setTimeout(() => {
+                setWasCopied(false)
+            }, 1500)
+        })
     }
 
     function doOpen(){
@@ -54,10 +58,12 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemIdx, i
         if(!saving){
             setSaving(true);
             service.updateBoardItem({boardId, boardItemId: boardItem._id, boardIdx, boardItemIdx, newValue}).then((res)=>{
+                setCurrentValue(newValue);
                 setSaving(false);
-                setWasSaved(true)
+                setWasSaved(true);
                 setTimeout(() => {
                     setWasSaved(false)
+                    loadBoards()
                 }, 1500)
             })
         }
@@ -92,7 +98,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemIdx, i
     }
 
     function isURL(){
-        return boardItem.text.slice(0, 4) === 'http'
+        return currentValue.slice(0, 4) === 'http'
     }
 
     function getButtonLinkClassList(){
@@ -133,37 +139,37 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemIdx, i
 
     return (
         <div className={"row mb-3 board-item "}
-             id={"board-item-" + boardIdx}
-             data-id={boardItem._id}
+             id={"board-item-" + boardItemId}
+             data-id={boardItemId}
              data-board-id={boardId}
              data-board-idx={boardIdx}
+             data-board-item-id={boardItemId}
              data-board-item-idx={boardItemIdx}>
-            <div className={"col-auto"}>
+            <div className={"col-auto p-1"}>
                 <button className={"btn btn-danger"}
                         title={"Delete Item"}
                         onClick={deleteBoardItem}>
-                    <FaX/> {boardItemIdx}
+                    <FaX/>
                 </button>
             </div>
-            <div className={"col"}>
-                {boardItem._id}
+            <div className={"col p-1"}>
                 <input
                     type={"text"}
                     className={getInputClassList()}
-                    defaultValue={boardItem.text}
+                    defaultValue={currentValue.toString()}
                     onChange={onChange}
                     onKeyUp={onKeyUp}
                 />
             </div>
-            <div className={"col-auto"}>
-                <button id={"save-" + boardItem._id}
+            <div className={"col-auto p-1"}>
+                <button id={"save-" + boardItemId}
                         className={"btn btn-primary"}
                         title={"Save"}
                         onClick={save}>
                     {renderSaveIcon()}
                 </button>
             </div>
-            <div className={"col-auto"}>
+            <div className={"col-auto p-1"}>
                 <button className={"btn btn-primary"}
                         title={"Copy"}
                         onClick={doCopy}>
@@ -171,7 +177,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemIdx, i
                 </button>
                 {renderWasCopied()}
             </div>
-            <div className={"col-auto"}>
+            <div className={"col-auto p-1"}>
                 <button className={getButtonLinkClassList()}
                         title={"Open"}
                         onClick={doOpen}>

@@ -3,10 +3,21 @@ import {useEffect, useState} from "react";
 import {BreakpointService} from "services/BreakpointService";
 import {ServerService} from "services/ServerService";
 import {ResizeService} from "services/ResizeService";
+import {UserService} from "@/services/UserService";
+import cookieCutter from 'cookie-cutter';
+
+import {USERID} from "@/services/AppService";
 function Nav({...pageProps}) {
 
-
     const serverService = new ServerService();
+    // let isLoggedIn = false;
+    // if(serverService.isServerSide()){
+    //     // isLoggedIn = cookieCutter.get(USERID)
+    // }else{
+    //     isLoggedIn = cookieCutter.get(USERID)
+    // }
+    // const userService = new UserService()
+    // console.log('isLoggedIn', isLoggedIn)
     let breakpointService = null;
 
     const [randomNumber, setRandomNumber] = useState(Math.random());
@@ -71,6 +82,7 @@ function Nav({...pageProps}) {
             <div className={getNavbarDivClassName()}>
                 <a className="navbar-brand m-0"
                    href="#">
+                    Clipboard Manager
                 </a>
                 <button
                     id={"js-navbar-toggler"}
@@ -89,17 +101,26 @@ function Nav({...pageProps}) {
                      id="navbarNav">
                     <ul className="navbar-nav">
                         {pages.map((page, idx) => {
-                            return (
-                                <li className="nav-item" key={idx}>
-                                    <Link
-                                        href={page.route}
-                                        onClick={()=> handleNavClick(page)}
-                                        className={getClass(page)}
-                                        aria-current="page">
-                                        {page.name}
-                                    </Link>
-                                </li>
-                            )
+                            // if(!page.hasOwnProperty('requireAuth')
+                            //     || (!page.requireAuth && !isLoggedIn)
+                            //     || (page.requireAuth && isLoggedIn)){
+                                return (
+                                    <li className="nav-item" key={idx}>
+                                        <Link
+                                            href={page.route}
+                                            onClick={()=> handleNavClick(page)}
+                                            className={getClass(page)}
+                                            aria-current="page">
+                                            {page.name}
+                                        </Link>
+                                    </li>
+                                )
+                            // }else{
+                            //     return (
+                            //         <></>
+                            //     )
+                            // }
+
                         })}
                     </ul>
                 </div>

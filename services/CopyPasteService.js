@@ -1,32 +1,25 @@
-import {UserService} from "@/services/UserService";
 import {FetchService} from "@/services/FetchService";
+import {generateRandomTitle, getRandomInt} from "@/services/AppService";
+
 
 const LOCAL_STORAGE_KEY = 'cp';
 
-const BOARDS = [];
-const BOARD_ITEM_LIST = [];
+const BOARD_ITEM_LIST = [
+    // BOARD_ITEM
+];
 const BOARD_ITEM = {
+    // _id: '',
+    order: 0,
+    text: '',
+}
+
+const BOARDS = [];
+const BOARD = {
+    // _id: '',
+    order: 0,
     title: '',
     list: BOARD_ITEM_LIST
 }
-
-const RANDOM_TITLES = [
-    'Grocery List',
-    'Shopping List',
-    'School List',
-    'Kids Names',
-    'List of Miracles',
-    'Recipes',
-    'My Organs',
-    'To do or not todo',
-    'My Oh My!',
-    'Days of the week',
-    'Uh oh, forgot to set a title',
-    'I can not think of anything else',
-    'Test',
-    'Try Again',
-    'Just Kidding',
-];
 
 export class CopyPasteService {
 
@@ -35,6 +28,38 @@ export class CopyPasteService {
         this.boards = [] //this.getBoards();
         this.createDispatcher();
     }
+
+    // temporary fix
+    runTempFix(){
+        console.log('runTempFix')
+        let doSave = false;
+        let boards = this.getBoardsByLocalStorage();
+        boards.forEach((board, boardIdx)=>{
+            if(typeof board._id === 'undefined'){
+                doSave = true
+                board._id = getRandomInt()
+                board.order = boardIdx
+            }
+            board.list.forEach((listItem, listItemIdx)=>{
+
+                if(typeof listItem !== 'object'){
+                    console.log('should be setting', listItemIdx, 'to', listItem)
+                    doSave = true;
+                    boards[boardIdx].list[listItemIdx] = {
+                        _id: getRandomInt(),
+                        order: listItemIdx,
+                        text: listItem
+                    }
+                }
+            })
+        });
+        if(doSave){
+            this.setBoards(boards);
+        }
+    }
+
+
+    //
 
     createDispatcher() {
 
@@ -61,6 +86,7 @@ export class CopyPasteService {
     }
 
     dispatchForceReload() {
+        console.log('dispatchForceReload called')
         this.dispatch('forceReload');
     }
 
@@ -106,17 +132,6 @@ export class CopyPasteService {
         localStorage.setItem(LOCAL_STORAGE_KEY, '');
     }
 
-    // thank you mozilla
-    getRandomIntInclusive(min = 0, max = RANDOM_TITLES.length) {
-        min = Math.ceil(min);
-        max = Math.floor(max);
-        return Math.floor(Math.random() * (max - min + 1) + min); // The maximum is inclusive and the minimum is inclusive
-    }
-
-    generateRandomTitle() {
-        return RANDOM_TITLES[this.getRandomIntInclusive()];
-    }
-
     // boards crud
 
     createBoard(title = '') {
@@ -129,36 +144,48 @@ export class CopyPasteService {
                     resolve(resp);
                 })
             }else{
-                resolve(this.createBoardLocalStorage(title))
+                this.createBoardLocalStorage().then((boards)=>{
+                    resolve({
+                        success: true,
+                        message: '',
+                        data: boards
+                    });
+                })
             }
         })
 
     }
 
-    createBoardLocalStorage(title){
-        if (!title) {
-            title = this.generateRandomTitle();
-        }
+    createBoardLocalStorage(){
 
         // generate board item
-        let boardItem = Object.assign(BOARD_ITEM, {
-            title: title
+        let board = Object.assign(BOARD, {
+            _id: getRandomInt(),
+            order: 0,
+            title: generateRandomTitle(),
+            list: [
+                Object.assign(BOARD_ITEM,{
+                    _id: getRandomInt(),
+                    order: 0,
+                    text: generateRandomTitle()
+                })
+            ]
         });
 
         // get and append boards
-        let boards = this.getBoards();
-        boards.push(boardItem);
-
-        // write to local storage
-        this.setBoards(boards);
-        return this.getBoards()
+        return this.getBoards().then((boards)=>{
+            boards.push(board);
+            // write to local storage
+            this.setBoards(boards);
+            return boards;
+        });
     }
 
-
-
-    readBoard(idx) {
-        return this.getBoards()[idx]
-    }
+    // readBoard(idx) {
+    //     return this.getBoards().then((boards)=>{
+    //         return boards[idx]
+    //     });
+    // }
 
     updateBoard({boardId, boardIdx, newValue}) {
         return new Promise((resolve, reject)=>{
@@ -182,10 +209,11 @@ export class CopyPasteService {
         })
     }
 
-    updateBoardLocalStorage({boardIdx}){
-        let boards = this.getBoards()
-        boards[boardIdx].title = title;
-        this.setBoards(boards);
+    updateBoardLocalStorage({boardIdx, newValue}){
+        this.getBoards().then((boards)=>{
+            boards[boardIdx].title = newValue;
+            this.setBoards(boards);
+        })
     }
 
     deleteBoard({boardId, boardIdx}) {
@@ -210,24 +238,30 @@ export class CopyPasteService {
     }
 
     deleteBoardLocalStorage({boardIdx}){
-        let boards = this.getBoards()
-        boards.splice(boardIdx, 1)
-        this.setBoards(boards);
-        this.dispatchForceReload();
+         this.getBoards().then((boards)=>{
+             boards.splice(boardIdx, 1)
+             this.setBoards(boards);
+             this.dispatchForceReload();
+         })
     }
 
     // lists crud
 
-    createBoardItem({item, boardIdx, boardId}) {
+    createBoardItem({text, boardIdx, boardId}) {
         return new Promise((resolve, reject)=>{
             if(this.isLoggedIn){
-                this.createBoardItemMongoDB({item, boardId}).then((doc)=>{
+                this.createBoardItemMongoDB({text, boardId}).then((doc)=>{
                     console.log('createBoardItem:doc', doc);
                     resolve(doc);
                 });
             }else{
-                this.createBoardItemLocalStorage(item, boardIdx)
-                resolve()
+                this.createBoardItemLocalStorage({text, boardIdx}).then((boardItem)=>{
+                    resolve({
+                        success: true,
+                        message: '',
+                        data: [boardItem]
+                    })
+                })
             }
         })
     }
@@ -244,18 +278,38 @@ export class CopyPasteService {
         })
     }
 
-    createBoardItemLocalStorage(item, where){
-        let boards = this.getBoards();
-        boards[where].list.push(item);
-        this.setBoards(boards);
-
+    createBoardItemLocalStorage({text, boardIdx}){
+        let boardItem = Object.assign(BOARD_ITEM, {
+            _id: getRandomInt(),
+            order: this.getBoardsByLocalStorage()[boardIdx].list.length,
+            text: text
+        })
+        return this.getBoards().then((boards)=>{
+            boards[boardIdx].list.push(boardItem);
+            this.setBoards(boards);
+            return boardItem
+        });
     }
 
-    readList() {
-
-    }
+    // readList() {
+    //
+    // }
 
     updateBoardItem({boardId, boardItemId, boardIdx, boardItemIdx, newValue}) {
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.updateBoardItemMongoDb({boardItemId, newValue}).then((res)=>{
+                    resolve(res);
+                })
+            }else{
+                this.updateBoardItemLocalStorage({boardIdx, boardItemIdx, newValue}).then((res)=>{
+                    resolve(res);
+                })
+            }
+        })
+    }
+
+    updateBoardItemMongoDb({boardItemId, newValue}){
         let f = new FetchService();
         let url = '/api/updateBoardItem'
         let data = {
@@ -267,18 +321,21 @@ export class CopyPasteService {
         })
     }
 
-    updateBoardItemMongoDb({boardItemId, newValue}){
-        return new Promise((resolve, reject)=>{
-            this.connect().then((db)=>{
-                db.collection('')
-            })
+    updateBoardItemLocalStorage({boardIdx, boardItemIdx, newValue}){
+        let boardItem = Object.assign(BOARD_ITEM, {
+            text: newValue
         })
-    }
-
-    updateBoardItemLocalStorage(){
-        let boards = this.getBoards()
-        boards[boardIdx].list[boardItemIdx] = newValue;
-        this.setBoards(boards);
+        return new Promise((resolve, reject)=>{
+            this.getBoards().then((boards)=>{
+                boards[boardIdx].list[boardItemIdx] = boardItem;
+                this.setBoards(boards);
+                resolve({
+                    success: true,
+                    message: '',
+                    data: [boardItem]
+                })
+            });
+        })
     }
 
     deleteBoardItem({boardId, boardItemId, boardIdx, boardItemIdx}) {
@@ -307,33 +364,84 @@ export class CopyPasteService {
     }
 
     deleteBoardItemLocalStorage({boardIdx, boardItemIdx}){
-        let boards = this.getBoards()
-        boards[boardIdx].list.splice(boardItemIdx, 1);
-        this.setBoards(boards);
-        this.dispatchForceReload();
+        let boards = this.getBoards().then((boards)=>{
+            boards[boardIdx].list.splice(boardItemIdx, 1);
+            this.setBoards(boards);
+            this.dispatchForceReload();
+        });
     }
+
+
 
     // additional methods
 
-    swapBoard(fromBoardIdx, toBoardIdx){
-        let boards = this.getBoards();
-        let from = boards[fromBoardIdx];
-        let to = boards[toBoardIdx];
-        boards[toBoardIdx] = from;
-        boards[fromBoardIdx] = to;
-        this.setBoards(boards);
-        this.dispatchForceReload()
+    swapBoard({fromBoardIdx, toBoardIdx, fromBoardId, toBoardId}){
+        console.log('swapBoard')
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.swapBoardMongoDb({fromBoardIdx, toBoardIdx, fromBoardId, toBoardId}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.swapBoardLocalStorage({fromBoardIdx, toBoardIdx})
+                resolve()
+            }
+        })
     }
 
-    swapBoardItem(boardIdx, fromIdx, toIdx){
-        let boards = this.getBoards();
-        let board = boards[boardIdx]
-        let from = board.list[fromIdx];
-        let to = board.list[toIdx];
-        board.list[toIdx] = from;
-        board.list[fromIdx] = to;
-        this.setBoards(boards);
-        this.dispatchForceReload()
+    swapBoardMongoDb({fromBoardIdx, toBoardIdx, fromBoardId, toBoardId}){
+        let f = new FetchService();
+        let url = '/api/swapBoard'
+        let data = {fromBoardIdx, toBoardIdx, fromBoardId, toBoardId}
+        console.log('data', data)
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    swapBoardLocalStorage({fromBoardIdx, toBoardIdx}){
+        this.getBoards().then((boards)=>{
+            let from = boards[fromBoardIdx];
+            let to = boards[toBoardIdx];
+            boards[toBoardIdx] = from;
+            boards[fromBoardIdx] = to;
+            this.setBoards(boards);
+            this.dispatchForceReload()
+        })
+    }
+
+    swapBoardItem({boardIdx, fromIdx, toIdx, boardId, fromId, toId}){
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.swapBoardItemMongoDb({boardId, fromId, toId, fromIdx, toIdx}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.swapBoardItemLocalStorage({boardIdx, fromIdx, toIdx})
+                resolve()
+            }
+        })
+    }
+
+    swapBoardItemMongoDb({boardId, fromId, toId, fromIdx, toIdx}){
+        let f = new FetchService()
+        let url = '/api/swapBoardItem'
+        let data = {boardId, fromId, toId, fromIdx, toIdx}
+        return f.doPost(url, data).then((res)=>{
+            return res;
+        })
+    }
+
+    swapBoardItemLocalStorage({boardIdx, fromIdx, toIdx}){
+        this.getBoards().then((boards)=>{
+            let board = boards[boardIdx]
+            let from = board.list[fromIdx];
+            let to = board.list[toIdx];
+            board.list[toIdx] = from;
+            board.list[fromIdx] = to;
+            this.setBoards(boards);
+            // this.dispatchForceReload()
+        })
     }
 
 }
