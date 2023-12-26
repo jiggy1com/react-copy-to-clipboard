@@ -1,13 +1,14 @@
 import clientPromise from "@/lib/mongodb";
 import {hashPassword} from "@/services/StringHelpers";
 import {ObjectId} from "mongodb";
-import {generateRandomTitle, MONGODB_DATABASE} from "@/services/AppService";
+import {
+    generateRandomTitle,
+    MONGODB_COLLECTION_BOARD_ITEM,
+    MONGODB_COLLECTION_BOARDS,
+    MONGODB_DATABASE
+} from "@/services/AppService";
 
-
-// TODO: rename boards to board
-// const BOARDS = 'boards';
-// const BOARD_ITEM = 'boardItem';
-
+// TODO: move BOARD and BOARD_ITEM to AppService, same for CopyPasteService
 const BOARD = {
     // _id,
     order: 0,
@@ -18,12 +19,11 @@ const BOARD = {
 
 const BOARD_ITEM = {
     // _id,
+    order: 0,
     type: 'text',
     text: '',
     userId: null
 }
-
-
 
 export class MongoDBService {
 
@@ -128,10 +128,10 @@ export class MongoDBService {
                     let query = {
                         userId: this.userId
                     }
-                    db.collection('boards').find(query).toArray().then((boards)=>{
+                    db.collection(MONGODB_COLLECTION_BOARDS).find(query).toArray().then((boards)=>{
                         let boardData = this.getNewBoard();
                         boardData.order = boards.length;
-                        db.collection('boards').insertOne(boardData).then((boardRecord)=>{
+                        db.collection(MONGODB_COLLECTION_BOARDS).insertOne(boardData).then((boardRecord)=>{
                             console.log('boardRecord', boardRecord);
                             let query = {
                                 _id: new ObjectId(boardRecord.insertedId)
@@ -144,7 +144,7 @@ export class MongoDBService {
                             let options = {
                                 returnNewDocument: true
                             }
-                            db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                            db.collection(MONGODB_COLLECTION_BOARDS).findOneAndUpdate(query, update, options).then((doc)=>{
                                 this.getBoardsByUserId(this.userId).then((boards)=>{
                                     resolve(boards)
                                 })
@@ -158,7 +158,7 @@ export class MongoDBService {
 
     getBoardsByUserId(userId){
         return this.connect().then((db)=>{
-            return db.collection('boards').aggregate([
+            return db.collection(MONGODB_COLLECTION_BOARDS).aggregate([
                 {
                     $match: {
                         userId: userId,
@@ -171,7 +171,7 @@ export class MongoDBService {
                 },
                 {
                     $lookup: {
-                        from: 'boardItem',
+                        from: MONGODB_COLLECTION_BOARD_ITEM,
                         localField: 'list',
                         foreignField: '_id',
                         as: 'list',
@@ -216,7 +216,6 @@ export class MongoDBService {
                 boards.forEach((board)=>{
                     if(board._id.toString() === _id){
                         foundBoard = board;
-                        // resolve(board)
                     }
                 })
                 if(foundBoard){
@@ -227,18 +226,6 @@ export class MongoDBService {
             }).catch((err)=>{
                 resolve(err)
             })
-
-            // let query = {
-            //     _id: new ObjectId(_id),
-            //     userId: this.userId
-            // }
-            // console.log('query', query);
-            // this.connect().then((db)=>{
-            //     db.collection('boards').findOne(query).then((board)=>{
-            //         console.log('board', board);
-            //         resolve(board)
-            //     })
-            // })
         })
     }
 
@@ -248,7 +235,7 @@ export class MongoDBService {
     //         userId: this.userId,
     //     }
     //     return this.connect().then((db) => {
-    //         return db.collection('boards')
+    //         return db.collection(MONGODB_COLLECTION_BOARDS)
     //             .find(query)
     //             .toArray()
     //     });
@@ -269,7 +256,7 @@ export class MongoDBService {
                 let options = {
                     returnDocument: 'after'
                 }
-                db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                db.collection(MONGODB_COLLECTION_BOARDS).findOneAndUpdate(query, update, options).then((doc)=>{
                     console.log('updateBoard:doc', doc);
                     resolve(doc);
                 }).catch((err)=>{
@@ -289,7 +276,7 @@ export class MongoDBService {
                 let options = {
 
                 }
-                db.collection('boards').findOneAndDelete(query, options).then((doc)=>{
+                db.collection(MONGODB_COLLECTION_BOARDS).findOneAndDelete(query, options).then((doc)=>{
                     console.log('deleteBoard:doc', doc);
                     resolve();
                 })
@@ -302,7 +289,7 @@ export class MongoDBService {
     createBoardItem() {
         let boardItem = this.getNewBoardItem(generateRandomTitle(), 0)
         return this.connect().then((db)=>{
-            return db.collection('boardItem').insertOne(boardItem);
+            return db.collection(MONGODB_COLLECTION_BOARD_ITEM).insertOne(boardItem);
         })
     }
 
@@ -313,11 +300,11 @@ export class MongoDBService {
                     _id: new ObjectId(_id),
                     userId: this.userId,
                 }
-                db.collection('boards').find(query).toArray().then((board) => {
+                db.collection(MONGODB_COLLECTION_BOARDS).find(query).toArray().then((board) => {
                     let boardItem = this.getNewBoardItem(text);
                         boardItem.order = board[0].list.length;
                     let options = {}
-                    db.collection('boardItem').insertOne(boardItem).then((boardItem)=>{
+                    db.collection(MONGODB_COLLECTION_BOARD_ITEM).insertOne(boardItem).then((boardItem)=>{
 
                         let query = {
                             _id: new ObjectId(_id),
@@ -331,7 +318,7 @@ export class MongoDBService {
                             returnNewDocument: true
                         }
 
-                        db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                        db.collection(MONGODB_COLLECTION_BOARDS).findOneAndUpdate(query, update, options).then((doc)=>{
                             console.log('addBoardToItem:doc', doc)
                             resolve(doc)
                         })
@@ -360,7 +347,7 @@ export class MongoDBService {
                 let options = {
                     returnNewDocument: true
                 }
-                db.collection('boardItem').findOneAndUpdate(query, update, options).then((doc)=>{
+                db.collection(MONGODB_COLLECTION_BOARD_ITEM).findOneAndUpdate(query, update, options).then((doc)=>{
                     console.log('doc', doc);
                     resolve(doc);
                 })
@@ -376,7 +363,7 @@ export class MongoDBService {
                     userId: this.userId
                 }
                 // delete board item
-                db.collection('boardItem').deleteOne(query).then((result)=>{
+                db.collection(MONGODB_COLLECTION_BOARD_ITEM).deleteOne(query).then((result)=>{
                     console.log('deleteBoardItem:result', result);
 
                     // find board and pull board item
@@ -392,7 +379,7 @@ export class MongoDBService {
                     let options = {
                         returnDocument: 'after',
                     }
-                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                    db.collection(MONGODB_COLLECTION_BOARDS).findOneAndUpdate(query, update, options).then((doc)=>{
                         console.log('deleteBoardItem:doc', doc);
                         resolve(doc);
                     })
@@ -405,7 +392,7 @@ export class MongoDBService {
         let query = {userId}
         return new Promise((resolve, reject)=>{
             this.connect().then((db)=>{
-                let Boards = db.collection('boards');
+                let Boards = db.collection(MONGODB_COLLECTION_BOARDS);
                 Boards.find(query).toArray().then((boards)=>{
 
                 }).then(()=>{
@@ -450,7 +437,7 @@ export class MongoDBService {
                     userId,
                     _id: new ObjectId(boardId)
                 }
-                db.collection('boards').findOne(query).then((doc)=>{
+                db.collection(MONGODB_COLLECTION_BOARDS).findOne(query).then((doc)=>{
                     console.log('doc', doc);
 
                     let list = doc.list;
@@ -468,7 +455,7 @@ export class MongoDBService {
                         returnDocument: 'after'
                     }
 
-                    db.collection('boards').findOneAndUpdate(query, update, options).then((doc)=>{
+                    db.collection(MONGODB_COLLECTION_BOARDS).findOneAndUpdate(query, update, options).then((doc)=>{
                         console.log('updated:doc', doc);
                         resolve(doc)
                     })
@@ -480,7 +467,29 @@ export class MongoDBService {
         })
     }
 
-
+    toggleBoardItem({boardId, boardItemId, newType}){
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    _id: new ObjectId(boardItemId),
+                    userId: this.userId,
+                }
+                let update = {
+                    $set: {
+                        type: newType
+                    }
+                }
+                let options = {
+                    returnDocument: 'after'
+                }
+                db.collection(MONGODB_COLLECTION_BOARD_ITEM).findOneAndUpdate(query, update, options).then((doc)=>{
+                    resolve(doc);
+                }).catch((err)=>{
+                    reject(err)
+                })
+            })
+        })
+    }
 
 
 }

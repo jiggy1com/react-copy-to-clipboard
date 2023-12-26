@@ -1,6 +1,8 @@
 import {FetchService} from "@/services/FetchService";
 import {generateRandomTitle, getRandomInt} from "@/services/AppService";
 
+// TODO: move BOARD and BOARD_ITEM to AppService, same for CopyPasteService
+
 
 const LOCAL_STORAGE_KEY = 'cp';
 
@@ -9,13 +11,16 @@ const BOARD_ITEM_LIST = [
 ];
 const BOARD_ITEM = {
     // _id: '',
+    userId: null,
     order: 0,
     text: '',
+    type: 'text', // types include: text, password
 }
 
 const BOARDS = [];
 const BOARD = {
     // _id: '',
+    userId: null,
     order: 0,
     title: '',
     list: BOARD_ITEM_LIST
@@ -41,13 +46,13 @@ export class CopyPasteService {
                 board.order = boardIdx
             }
             board.list.forEach((listItem, listItemIdx)=>{
-
                 if(typeof listItem !== 'object'){
                     console.log('should be setting', listItemIdx, 'to', listItem)
                     doSave = true;
                     boards[boardIdx].list[listItemIdx] = {
                         _id: getRandomInt(),
                         order: listItemIdx,
+                        type: 'text',
                         text: listItem
                     }
                 }
@@ -371,8 +376,6 @@ export class CopyPasteService {
         });
     }
 
-
-
     // additional methods
 
     swapBoard({fromBoardIdx, toBoardIdx, fromBoardId, toBoardId}){
@@ -441,6 +444,38 @@ export class CopyPasteService {
             board.list[fromIdx] = to;
             this.setBoards(boards);
             // this.dispatchForceReload()
+        })
+    }
+
+    toggleBoardItem({boardIdx, boardId, boardItemIdx, boardItemId, newType}){
+        return new Promise((resolve, reject)=>{
+            if(this.isLoggedIn){
+                this.toggleBoardItemMongoDb({boardId, boardItemId, newType}).then(()=>{
+                    resolve()
+                })
+            }else{
+                this.toggleBoardItemLocalStorage({boardIdx, boardItemIdx, newType}).then(()=>{
+                    resolve()
+                })
+            }
+        })
+
+    }
+
+    toggleBoardItemMongoDb({boardId, boardItemId, newType}){
+        let f = new FetchService()
+        let url = '/api/updateBoardItemType'
+        return f.doPost(url, {boardId, boardItemId, newType}).then((res)=>{
+            return res
+        })
+    }
+
+    toggleBoardItemLocalStorage({boardIdx, boardItemIdx, newType}){
+        return new Promise((resolve, reject)=>{
+            let boards = this.getBoardsByLocalStorage()
+            boards[boardIdx].list[boardItemIdx].type = newType;
+            this.setBoards(boards);
+            resolve()
         })
     }
 

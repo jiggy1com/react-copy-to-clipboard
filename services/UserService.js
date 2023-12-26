@@ -13,6 +13,10 @@ export class UserService{
     }
 
     isLoggedIn(){
+        return typeof this.getManager().get(USERID) !== 'undefined'
+    }
+
+    getUserIdCookie(){
         return this.getManager().get(USERID) ?? null
     }
 

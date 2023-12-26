@@ -1,12 +1,15 @@
 import {CopyPasteService} from "@/services/CopyPasteService";
 import {useEffect, useState} from "react";
-import {FaSpinner, FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
+import {FaEye, FaEyeSlash, FaSpinner, FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
 import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
+
 
 export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, boardItemIdx, isLoggedIn, loadBoards, notifyParent, setupDragAndDrop}) {
 
     const service = new CopyPasteService(isLoggedIn)
 
+    // let originalType = boardItem.type;
+    const [localType, setLocalType] = useState(boardItem.type)
     const [currentValue, setCurrentValue] = useState(boardItem.text);
     const [newValue, setNewValue] = useState(boardItem.text);
     const [wasCopied, setWasCopied] = useState(false);
@@ -38,6 +41,10 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
         }
     }
 
+    function onFocus(e){
+        e.stopPropagation()
+    }
+
     function doCopy(e) {
         navigator.clipboard.writeText(currentValue.toString()).then(()=>{
             setWasCopied(true)
@@ -66,6 +73,40 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
                     loadBoards()
                 }, 1500)
             })
+        }
+    }
+
+    function togglePasswordType(e){
+        e.preventDefault()
+        e.stopPropagation()
+        let newType = localType === 'password'
+            ? 'text'
+            : 'password';
+        setLocalType(newType);
+        service.toggleBoardItem({boardId, boardItemId, boardIdx, boardItemIdx, newType}).then(()=>{
+            loadBoards()
+        })
+    }
+
+    function renderPasswordToggle(){
+        return (
+            <button
+                className={"btn btn-primary password-toggle"}
+                onClick={togglePasswordType}>
+                {renderEye()}
+            </button>
+        )
+    }
+
+    function renderEye(){
+        if(localType === 'text'){
+            return (
+                <FaEye />
+            )
+        }else{
+            return (
+                <FaEyeSlash />
+            )
         }
     }
 
@@ -154,12 +195,14 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
             </div>
             <div className={"col p-1"}>
                 <input
-                    type={"text"}
+                    type={localType.toString()}
                     className={getInputClassList()}
                     defaultValue={currentValue.toString()}
                     onChange={onChange}
                     onKeyUp={onKeyUp}
+                    onFocus={onFocus}
                 />
+                {renderPasswordToggle()}
             </div>
             <div className={"col-auto p-1"}>
                 <button id={"save-" + boardItemId}

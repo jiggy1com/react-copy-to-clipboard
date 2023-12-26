@@ -3,6 +3,13 @@
     background: lime;
 }
 
+.board-item{
+    .password-toggle{
+        right: 5px;
+        top: 4px;
+    }
+}
+
 .password-toggle{
     position: absolute;
     right: 15px;

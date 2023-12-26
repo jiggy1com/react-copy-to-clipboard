@@ -15,7 +15,7 @@ export class ResizeService {
     bindResize(){
         if(!this.serverService.isServerSide()){
             window.addEventListener('resize', debounce(()=>{
-                this.onResize.bind(this)
+                this.onResize.bind(this)()
             },250));
         }
     }
@@ -27,7 +27,6 @@ export class ResizeService {
     }
 
     onResize(){
-        // console.log('onResize', this.handler);
         if(this.handler){
             debounce(this.handler)();
         }

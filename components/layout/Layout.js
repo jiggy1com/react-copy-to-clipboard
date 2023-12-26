@@ -20,9 +20,21 @@ import H1Component from "@/components/text/H1Component";
 // });
 const inter = Ubuntu_Mono({ subsets: ['latin'], weight: '400' });
 
-export default function Layout({Component, pageProps, children}){
+/**
+ *
+ * @param Component
+ * @param pageProps
+ * @param children
+ * @param props
+ * @param test
+ * @param page
+ * @returns {JSX.Element}
+ * @constructor
+ */
+export default function Layout({Component, pageProps, children, props, test, page}){
 
-    console.log('Layout')
+    console.log('Layout:page', page)
+    console.log('Layout:pageProps', pageProps)
 
     const router = useRouter()
     const pages = [
@@ -73,6 +85,7 @@ export default function Layout({Component, pageProps, children}){
     resizeService.setHandler(resizeHandler);
 
     function resizeHandler(){
+        console.log('Layout:resizeHandler')
         setRandomNumber(Math.random())
     }
 
@@ -129,11 +142,16 @@ export default function Layout({Component, pageProps, children}){
                 <meta name={"keywords"} content={currentPage.keywords} />
                 <meta name={"description"} content={currentPage.description} />
                 <link href={"https://site1.admin.meanwebapp.com/themes/flatly.css"} type={"text/css"} />
+                <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+                <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+                <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+                <link rel="manifest" href="/site.webmanifest" />
                 {/*trackPageViews*/}
             </Head>
 
             <HeaderComponent>
                 <Nav
+                    isLoggedIn={pageProps.isLoggedIn}
                     currentPage={currentPage}
                     pages={pages}
                     navClick={handleNavClick} />

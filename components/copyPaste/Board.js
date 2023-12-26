@@ -11,7 +11,7 @@ import {generateRandomTitle} from "@/services/AppService";
 export default function Board({board, boardId, boardIdx, notifyParent, isLoggedIn, loadBoards, clearBoards, isSingleBoard=false}) {
 
     // const boardId = board._id;
-    const [currentValue, setCurrentValue] = useState(board.title);
+    const [currentValue, setCurrentValue] = useState(board.title ?? "shit");
     const [newValue, setNewValue] = useState(board.title);
     const cpService = new CopyPasteService(isLoggedIn)
     let dndService = null;

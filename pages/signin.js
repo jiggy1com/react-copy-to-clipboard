@@ -1,15 +1,7 @@
 import FormComponent from "@/components/form/FormComponent";
-import FormText from "@/components/form/FormText";
 import {EmailFormModel, PasswordFormModel, TextFormModel} from "@/models/InputModel";
-import {FetchService} from "@/services/FetchService";
-import {isValidPassword} from "@/services/StringHelpers";
-import Cookies from 'cookies'
-import {USERID} from "@/services/AppService";
-// const http = new FetchService();
-// const options = {
-//     mode: 'cors',
-//     credentials: 'include',
-// }
+import {UserService} from "@/services/UserService";
+
 const formConfig = {
     action: '/api/signin',
     submitText: 'Submit',
@@ -40,9 +32,10 @@ const formConfig = {
     ]
 }
 
-export default function SignIn({testing, serverSideCookies}){
+export default function SignIn(){
+
     return (
-        <div className={"container"}>
+        <div className={"container-fluid mt-5"}>
             <div className={"row justify-content-md-center"}>
                 <div className={"col-12 col-md-6 col-lg-4"}>
                     <div className={"card"}>
@@ -50,7 +43,6 @@ export default function SignIn({testing, serverSideCookies}){
                             Sign In
                         </div>
                         <div className={"card-body"}>
-                            cookie: {JSON.stringify(serverSideCookies)}
                             <FormComponent formConfig={formConfig} />
                         </div>
                     </div>
@@ -62,42 +54,24 @@ export default function SignIn({testing, serverSideCookies}){
 
 export async function getServerSideProps(context) {
     const {req, query, res, asPath, pathname } = context;
-    // isSecure = (req.headers.hasOwnProperty('x-forwarded-proto')
-    //     && req.headers['x-forwarded-proto'] === 'https');
-    // host = (isSecure ? 'https://' : 'http://') + req.headers.host;
-    //
-    // let fullRes = {
-    //     dsn: '',
-    //     cart: []
-    // }
-    //
-    // await getParams().then((res)=>{
-    //     fullRes.dsn = res.dsn
-    // }).catch((err)=>{
-    //     console.error('Cart:index:getParams:err', err);
-    // });
+    let userService = new UserService(req);
 
-    // Create a cookies instance
-    const cookies = new Cookies(req, res)
-
-    // Get a cookie
-    cookies.get(USERID)
-
-    // Set a cookie
-    // cookies.set('myCookieName', 'some-value', {
-    //     httpOnly: true, // true by default
-    // })
-
-    // Delete a cookie
-    // cookies.set('myCookieName')
+    if(userService.isLoggedIn()){
+        return {
+            redirect: {
+                destination: '/',
+            }
+        }
+    }
 
     return {
         props: {
-            testing: '',
-            serverSideCookies: cookies.get(USERID),
+            // serverSideCookies: userService.getUserIdCookie(),
+            isLoggedIn: userService.isLoggedIn()
             // dsn: fullRes.dsn,
             // cart: []
         }
     }
 }
+
 

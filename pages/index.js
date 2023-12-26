@@ -101,8 +101,7 @@ export default function Index({defaultBoards, isLoggedIn}) {
     }
 
     return (
-        <div>
-            <div className={"container-fluid mb-5"}>
+        <div className={"container-fluid mt-5 mb-5"}>
                 <div className={"row"}>
                     <div className={"col-12"}>
 
@@ -112,7 +111,8 @@ export default function Index({defaultBoards, isLoggedIn}) {
                             Create a board, and add as many items as you like.<br/>
                             Data is saved to localStorage until you create an account.<br/>
                             Sign into your account to retrieve your clipboard manager.<br />
-                            To copy a value to your clipboard, click the copy button.
+                            To copy a value to your clipboard, click the copy button.<br />
+                            Data is NOT currently encrypted, so please do not store passwords or other sensitive information until further notice.
                         </div>
 
                         {/*add board button*/}
@@ -156,8 +156,15 @@ export default function Index({defaultBoards, isLoggedIn}) {
                                             <li>allow item type to be textarea</li>
                                             <li>auto scale textarea to maximum, default X rows</li>
                                             <li>allow user to set maximum / no maximum</li>
+
                                         </ul>
                                     </li>
+                                    <li>encrypt stored data, decrypt when returning
+                                        <ul>
+                                            <li>use a different encryption salt than used for account passwords</li>
+                                        </ul>
+                                    </li>
+                                    <li>add error handlers throughout application</li>
                                     <li>auto update local storage if board item is text, to be an object before breaking the site</li>
                                     <li>?</li>
                                 </ul>
@@ -167,16 +174,6 @@ export default function Index({defaultBoards, isLoggedIn}) {
                     </div>
                 </div>
             </div>
-
-            {/*<button onClick={clearBoards} className={"btn btn-primary"}>*/}
-            {/*    start over*/}
-            {/*</button>*/}
-
-            {/*<button onClick={test} className={"btn btn-primary"}>*/}
-            {/*    test*/}
-            {/*</button>*/}
-
-        </div>
     )
 }
 

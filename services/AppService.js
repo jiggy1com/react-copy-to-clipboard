@@ -1,6 +1,8 @@
 // all application constants
 
 export const MONGODB_DATABASE = 'clipboardmanager';
+export const MONGODB_COLLECTION_BOARDS = 'boards'
+export const MONGODB_COLLECTION_BOARD_ITEM = 'boardItem';
 
 export const USERID = 'userId';
 

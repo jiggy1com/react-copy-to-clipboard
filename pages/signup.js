@@ -1,14 +1,8 @@
 import FormComponent from "@/components/form/FormComponent";
-import FormText from "@/components/form/FormText";
 import {EmailFormModel, PasswordFormModel, TextFormModel} from "@/models/InputModel";
-import {FetchService} from "@/services/FetchService";
 import {isValidPassword} from "@/services/StringHelpers";
+import {UserService} from "@/services/UserService";
 
-// const http = new FetchService();
-// const options = {
-//     mode: 'cors',
-//     credentials: 'include',
-// }
 const formConfig = {
     action: '/api/createaccount',
     submitText: 'Submit',
@@ -41,9 +35,9 @@ const formConfig = {
 
 export default function SignUp({testing}){
     return (
-        <div className={"container"}>
+        <div className={"container-fluid mt-5"}>
             <div className={"row justify-content-md-center"}>
-                <div className={"col-12 col-md-4"}>
+                <div className={"col-12 col-md-6 col-lg-4"}>
                     <div className={"card"}>
                         <div className={"card-header"}>
                             Create Account
@@ -60,27 +54,10 @@ export default function SignUp({testing}){
 
 export async function getServerSideProps(context) {
     const {req, query, res, asPath, pathname } = context;
-    // isSecure = (req.headers.hasOwnProperty('x-forwarded-proto')
-    //     && req.headers['x-forwarded-proto'] === 'https');
-    // host = (isSecure ? 'https://' : 'http://') + req.headers.host;
-    //
-    // let fullRes = {
-    //     dsn: '',
-    //     cart: []
-    // }
-    //
-    // await getParams().then((res)=>{
-    //     fullRes.dsn = res.dsn
-    // }).catch((err)=>{
-    //     console.error('Cart:index:getParams:err', err);
-    // });
-
+    let userService = new UserService(req);
     return {
         props: {
-            testing: '',
-            // dsn: fullRes.dsn,
-            // cart: []
+            isLoggedIn: userService.isLoggedIn()
         }
     }
 }
-
