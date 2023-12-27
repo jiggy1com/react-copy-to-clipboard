@@ -1,5 +1,6 @@
 import Link from "next/link";
 import {FaPlus} from "react-icons/fa6";
+import {FaClipboard, FaClipboardList} from "react-icons/fa6";
 
 export function IndexSignedOut({addBoard}){
     return (
@@ -7,7 +8,7 @@ export function IndexSignedOut({addBoard}){
 
             <div className="p-5 mb-4 bg-light rounded-3">
                 <div className="container-fluid py-5">
-                    <h1 className="display-5 fw-bold">Welcome to the Clipboard Manager</h1>
+                    <h1 className="display-5 fw-bold">Welcome to the <FaClipboardList /> Clipboard Manager</h1>
                     <p className="col-md-8 fs-4">Do you find yourself having to copy and paste things often?
                         And use different types of media to store your data, or simply can't find it?</p>
                     <p className="col-md-8 fs-4">The Clipboard Manager was developed to help alleviate that stress by centralizing and

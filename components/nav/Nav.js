@@ -7,6 +7,7 @@ import {UserService} from "@/services/UserService";
 import cookieCutter from 'cookie-cutter';
 
 import {USERID} from "@/services/AppService";
+import {FaClipboard, FaClipboardList} from "react-icons/fa6";
 function Nav({...pageProps}) {
 
     // console.log('Nav:...pageProps', pageProps);
@@ -99,6 +100,7 @@ function Nav({...pageProps}) {
             <div className={getNavbarDivClassName()}>
                 <Link className="navbar-brand m-0"
                    href="/">
+                    <FaClipboardList />
                     Clipboard Manager
                 </Link>
                 <button
