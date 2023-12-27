@@ -64,9 +64,87 @@ export class MongoDBService {
     // authentication
 
     // create account
-    createAccount(data){
-        return this.connect().then((db)=>{
-           return db.collection('users').insertOne(data);
+    createAccount({email, password, salt, localStorage}){
+        let userId = null;
+        return new Promise((resolve, reject)=>{
+            this.connect().then((db)=>{
+                let query = {
+                    email: email,
+                }
+                db.collection('users').findOne(query).then((doc)=>{
+                    if(doc){
+                        reject({
+                            message: 'User already exists'
+                        })
+                    }else{
+                        db.collection('users').insertOne({email, password, salt}).then((doc)=>{
+                            this.setUserId(doc.insertedId.toString())
+                            if(Array.isArray(localStorage)){
+                                this.loopLocalStorage(localStorage).then(()=>{
+
+                                })
+                            }
+                            resolve({
+                                userId: this.userId
+                            })
+                        })
+                    }
+                })
+            })
+        })
+    }
+
+    async loopLocalStorage(localStorage){
+        for(let i=0; i<localStorage.length; i++){
+            await this.handleLocalStorageBoard(localStorage[i], i).then((res)=>{
+
+            })
+        }
+    }
+
+    handleLocalStorageBoard(board, boardIdx){
+        return new Promise((resolve, reject)=>{
+            let boardData = {
+                userId: this.userId,
+                title: board.title,
+                order: boardIdx,
+                list: []
+            }
+            this.connect().then((db)=>{
+                db.collection(MONGODB_COLLECTION_BOARDS).insertOne(boardData).then((newBoard)=>{
+                    this.loopLocalStorageBoardItems({newBoard, boardItems: board.list}).then((res)=>{
+                        resolve()
+                    })
+                })
+            })
+        })
+    }
+
+    async loopLocalStorageBoardItems({newBoard, boardItems}){
+        for(let i=0; i<boardItems.length; i++){
+            let data = {
+                newBoard,
+                boardItem: boardItems[i],
+                boardItemIdx: i,
+            }
+            await this.handleLocalStorageBoardItem(data).then((res)=>{
+
+            })
+        }
+    }
+
+    handleLocalStorageBoardItem({newBoard, boardItem, boardItemIdx}){
+        return new Promise((resolve, reject)=>{
+            let boardItemData = {
+                _id: newBoard.insertedId,
+                userId: this.userId,
+                text: boardItem.text,
+                type: boardItem.type,
+                order: boardItemIdx
+            }
+            this.addBoardItemToBoard(boardItemData).then((newBoardItem)=>{
+                resolve()
+            })
         })
     }
 
@@ -111,12 +189,13 @@ export class MongoDBService {
         })
     }
 
-    getNewBoardItem(text='', order = 0){
+    getNewBoardItem(text='', order = 0, type='text'){
         return Object.assign(BOARD_ITEM,{
             _id: new ObjectId(),
             order: order,
             userId: this.userId,
-            text: text
+            text: text,
+            type: type,
         })
     }
 
@@ -131,7 +210,7 @@ export class MongoDBService {
                     db.collection(MONGODB_COLLECTION_BOARDS).find(query).toArray().then((boards)=>{
                         let boardData = this.getNewBoard();
                         boardData.order = boards.length;
-                        db.collection(MONGODB_COLLECTION_BOARDS).insertOne(boardData).then((boardRecord)=>{
+                        db.collection(MONGODB_COLLECTION_BOARDS).insertOne(boardData).then((boardRecord)=> {
                             console.log('boardRecord', boardRecord);
                             let query = {
                                 _id: new ObjectId(boardRecord.insertedId)
@@ -293,7 +372,7 @@ export class MongoDBService {
         })
     }
 
-    addBoardItemToBoard({_id, text}){
+    addBoardItemToBoard({_id, text, type='text', order=null|0}){
         return new Promise((resolve, reject)=>{
             this.connect().then((db)=>{
                 let query = {
@@ -301,10 +380,14 @@ export class MongoDBService {
                     userId: this.userId,
                 }
                 db.collection(MONGODB_COLLECTION_BOARDS).find(query).toArray().then((board) => {
-                    let boardItem = this.getNewBoardItem(text);
-                        boardItem.order = board[0].list.length;
+                    let boardItemData = this.getNewBoardItem(text);
+                    boardItemData.order = order ?? board[0].list.length;
+                    boardItemData.type = type;
+                    console.log('boardItemDataObject', boardItemData)
                     let options = {}
-                    db.collection(MONGODB_COLLECTION_BOARD_ITEM).insertOne(boardItem).then((boardItem)=>{
+                    db.collection(MONGODB_COLLECTION_BOARD_ITEM).insertOne(boardItemData).then((boardItem)=>{
+
+                        console.log('boardItemDataActuallyInserted', boardItem);
 
                         let query = {
                             _id: new ObjectId(_id),
@@ -315,6 +398,7 @@ export class MongoDBService {
                             }
                         }
                         let options = {
+                            returnDocument: 'after',
                             returnNewDocument: true
                         }
 
@@ -348,7 +432,7 @@ export class MongoDBService {
                     returnNewDocument: true
                 }
                 db.collection(MONGODB_COLLECTION_BOARD_ITEM).findOneAndUpdate(query, update, options).then((doc)=>{
-                    console.log('doc', doc);
+                    console.log('updateBoardItem:doc', doc);
                     resolve(doc);
                 })
             })

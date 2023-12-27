@@ -24,8 +24,6 @@ export const RANDOM_TITLES = [
     'Just Kidding',
 ];
 
-
-
 // thank you mozilla
 export function getRandomInt(max=1000000) {
     return Math.floor(Math.random() * max);
@@ -39,4 +37,11 @@ export function getRandomIntInclusive(min = 0, max = RANDOM_TITLES.length) {
 
 export function generateRandomTitle() {
     return RANDOM_TITLES[getRandomIntInclusive()];
+}
+
+// sign in / out
+export function addDays(date, days) {
+    const copy = new Date(Number(date))
+    copy.setDate(date.getDate() + days)
+    return copy
 }

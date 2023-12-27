@@ -72,6 +72,24 @@ export default function Layout({Component, pageProps, children, props, test, pag
             keywords: '',
             description: '',
             requireAuth: true,
+        },
+
+        // temp pages
+        {
+            name: 'Features TODO',
+            route: '/todo',
+            active: false,
+            title: 'Clipboard Manager | Features TODO',
+            keywords: '',
+            description: '',
+        },
+        {
+            name: 'Help',
+            route: '/help',
+            active: false,
+            title: 'Clipboard Manager | Help',
+            keywords: '',
+            description: '',
         }
 
     ]

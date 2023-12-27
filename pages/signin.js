@@ -1,38 +1,46 @@
 import FormComponent from "@/components/form/FormComponent";
 import {EmailFormModel, PasswordFormModel, TextFormModel} from "@/models/InputModel";
 import {UserService} from "@/services/UserService";
-
-const formConfig = {
-    action: '/api/signin',
-    submitText: 'Submit',
-    fields: [
-        new EmailFormModel({
-            id: 'email',
-            placeholder: 'Email',
-            label: '',
-            name: 'email',
-            value: '',
-            // validation: function(){
-            //     return {
-            //         success: true,
-            //         message: 'no message',
-            //     }
-            // },
-            colClass: 'col-12',
-        }),
-        new PasswordFormModel({
-            id: 'password',
-            placeholder: 'Password',
-            label: '',
-            name: 'password',
-            value: '',
-            // validation: isValidPassword,
-            colClass: 'col-12',
-        })
-    ]
-}
+import {useRouter} from "next/router";
 
 export default function SignIn(){
+
+    const router = useRouter();
+
+    const formConfig = {
+        action: '/api/signin',
+        submitText: 'Submit',
+        successHandler: successHandler,
+        fields: [
+            new EmailFormModel({
+                id: 'email',
+                placeholder: 'Email',
+                label: '',
+                name: 'email',
+                value: '',
+                // validation: function(){
+                //     return {
+                //         success: true,
+                //         message: 'no message',
+                //     }
+                // },
+                colClass: 'col-12 mb-3',
+            }),
+            new PasswordFormModel({
+                id: 'password',
+                placeholder: 'Password',
+                label: '',
+                name: 'password',
+                value: '',
+                // validation: isValidPassword,
+                colClass: 'col-12 mb-3',
+            })
+        ]
+    }
+
+    function successHandler(){
+        window.location.href = '/'
+    }
 
     return (
         <div className={"container-fluid mt-5"}>

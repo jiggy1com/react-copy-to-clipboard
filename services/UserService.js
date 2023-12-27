@@ -20,4 +20,12 @@ export class UserService{
         return this.getManager().get(USERID) ?? null
     }
 
+    logout(){
+        let value = '';
+        let options = {
+            expires: new Date(0)
+        }
+        return this.getManager().set(USERID, value, options);
+    }
+
 }

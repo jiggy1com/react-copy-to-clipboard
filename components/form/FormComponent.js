@@ -60,6 +60,9 @@ export default function FormComponent({formConfig}){
                 // console.log('fetchService res', res);
                 setFormSuccess(res.success);
                 setFormMessage(res.message);
+                if(res.success && typeof config.successHandler === 'function'){
+                    config.successHandler()
+                }
             }).catch((err)=>{
                 // console.error('fetchService err', err);
                 setFormSuccess(false);

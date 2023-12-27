@@ -40,9 +40,10 @@ export default function FormText({fieldConfig, parentOnChange, parentHandleOnKey
     function renderPasswordToggle(){
         if(originalType === 'password'){
             return (
-                <button className={"btn btn-primary password-toggle"} onClick={togglePasswordType}>
+                <a className={"btn btn-primary text-white password-toggle"}
+                   onClick={togglePasswordType}>
                     {renderEye()}
-                </button>
+                </a>
             )
         }else{
             return (

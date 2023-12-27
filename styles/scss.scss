@@ -1,6 +1,7 @@
 @import "mixin";
 @import "clipboard";
-@import "theme";
+//@import "theme";
+//@import "themes/flatly.css";
 
 $bg-primary: #78C2AD;
 $bg-secondary: #F3969A;
@@ -19,10 +20,49 @@ $white: #fff;
     z-index: 9999999;
     padding: 30px;
 }
+.loading{
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: black;
+    opacity: .1;
+    z-index: 1;
+
+    > * {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+}
+.spin {
+    //color: black;
+    font-size: 2rem;
+    animation: animate 3s infinite ease-in-out;
+}
+@keyframes animate {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(720deg);
+    }
+}
 
 .draggable:hover,
 .draggable:focus{
     cursor: grab;
+}
+
+.form-group{
+    position: relative;
+}
+.board-item{
+    > * {
+        position: relative;
+    }
 }
 
 //header {

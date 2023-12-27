@@ -1,8 +1,7 @@
 import {MongoDBService} from "@/services/MongoDBService";
-import {hashPassword} from "@/services/StringHelpers";
 import {setCookie, getCookie} from "cookies-next";
 import {EncryptionService} from "@/services/EncryptionService";
-import {USERID} from "@/services/AppService";
+import {USERID, addDays} from "@/services/AppService";
 
 export default function (req, res) {
 
@@ -16,12 +15,6 @@ export default function (req, res) {
 
     let success = true;
     let message = 'Successful login.';
-
-    function addDays(date, days) {
-        const copy = new Date(Number(date))
-        copy.setDate(date.getDate() + days)
-        return copy
-    }
 
     service.signin(payload).then((resp)=>{
 

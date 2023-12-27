@@ -5,7 +5,7 @@ export default function FormHidden({fieldConfig, parentOnChange}){
     useEffect(()=>{
         parentOnChange({
             name: fieldConfig.name,
-            value: fieldConfig.value,
+            value: fieldConfig.defaultValue,
         })
     }, []);
 
@@ -21,6 +21,7 @@ export default function FormHidden({fieldConfig, parentOnChange}){
                 placeholder={fieldConfig.placeholder}
                 type={fieldConfig.type}
                 name={fieldConfig.name}
+                defaultValue={fieldConfig.defaultValue}
             />
         </>
 

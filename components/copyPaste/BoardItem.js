@@ -2,6 +2,7 @@ import {CopyPasteService} from "@/services/CopyPasteService";
 import {useEffect, useState} from "react";
 import {FaEye, FaEyeSlash, FaSpinner, FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
 import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
+import {LoadingComponent} from "@/components/loading/LoadingComponent";
 
 
 export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, boardItemIdx, isLoggedIn, loadBoards, notifyParent, setupDragAndDrop}) {
@@ -17,7 +18,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
     const [wasSaved, setWasSaved] = useState(false);
 
     useEffect(()=>{
-        console.log('boardItem:useEffect')
+        // console.log('boardItem:useEffect')
         setupDragAndDrop()
     }, [])
 
@@ -46,6 +47,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
     }
 
     function doCopy(e) {
+        e.target.blur()
         navigator.clipboard.writeText(currentValue.toString()).then(()=>{
             setWasCopied(true)
             setTimeout(() => {
@@ -54,13 +56,19 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
         })
     }
 
-    function doOpen(){
+    function doOpen(e){
+        e.target.blur()
         if(isURL()){
             window.open(boardItem.text)
         }
     }
 
-    function save() {
+    function save(e) {
+        try{
+            e.target.blur()
+        }catch(e){
+            // ignore
+        }
         document.querySelector('#save-' + boardItem._id).blur()
         if(!saving){
             setSaving(true);
@@ -79,6 +87,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
     function togglePasswordType(e){
         e.preventDefault()
         e.stopPropagation()
+        e.target.blur()
         let newType = localType === 'password'
             ? 'text'
             : 'password';
@@ -90,11 +99,11 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
 
     function renderPasswordToggle(){
         return (
-            <button
-                className={"btn btn-primary password-toggle"}
+            <a
+                className={"btn text-white btn-primary password-toggle"}
                 onClick={togglePasswordType}>
                 {renderEye()}
-            </button>
+            </a>
         )
     }
 
@@ -166,6 +175,18 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
         }
     }
 
+    function renderCopyIcon(){
+        if(wasCopied){
+            return (
+                <FaThumbsUp />
+            )
+        } else{
+            return (
+                <FaCopy />
+            )
+        }
+    }
+
     function getInputClassList(){
         let classList = 'form-control ';
         if(saving){
@@ -186,6 +207,7 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
              data-board-idx={boardIdx}
              data-board-item-id={boardItemId}
              data-board-item-idx={boardItemIdx}>
+            <LoadingComponent isLoading={saving || wasSaved} />
             <div className={"col-auto p-1"}>
                 <button className={"btn btn-danger"}
                         title={"Delete Item"}
@@ -216,9 +238,8 @@ export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, bo
                 <button className={"btn btn-primary"}
                         title={"Copy"}
                         onClick={doCopy}>
-                    <FaCopy/>
+                    {renderCopyIcon()}
                 </button>
-                {renderWasCopied()}
             </div>
             <div className={"col-auto p-1"}>
                 <button className={getButtonLinkClassList()}

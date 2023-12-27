@@ -97,10 +97,10 @@ function Nav({...pageProps}) {
     return (
         <nav className={getNavbarClassName()}>
             <div className={getNavbarDivClassName()}>
-                <a className="navbar-brand m-0"
-                   href="#">
+                <Link className="navbar-brand m-0"
+                   href="/">
                     Clipboard Manager
-                </a>
+                </Link>
                 <button
                     id={"js-navbar-toggler"}
                     onClick={handleNavbarTogglerClick}
