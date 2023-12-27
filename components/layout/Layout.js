@@ -9,29 +9,89 @@ import {HeaderComponent} from "./HeaderComponent";
 import {FooterComponent} from "./FooterComponent";
 
 // fonts
-import {Manrope, Open_Sans} from "next/font/google";
+import {Manrope, Open_Sans, Ubuntu_Mono} from "next/font/google";
 import {ServerService} from "services/ServerService";
 import {BreakpointService} from "services/BreakpointService";
 import {ResizeService} from "services/ResizeService";
 import Link from "next/link";
-const inter = Manrope({
-    subsets: ['latin']
-});
+import H1Component from "@/components/text/H1Component";
+// const inter = Manrope({
+//     subsets: ['latin']
+// });
+const inter = Ubuntu_Mono({ subsets: ['latin'], weight: '400' });
 
-export default function Layout({Component, pageProps, children}){
+/**
+ *
+ * @param Component
+ * @param pageProps
+ * @param children
+ * @param props
+ * @param test
+ * @param page
+ * @returns {JSX.Element}
+ * @constructor
+ */
+export default function Layout({Component, pageProps, children, props, test, page}){
 
-    console.log('Layout')
+    console.log('Layout:page', page)
+    console.log('Layout:pageProps', pageProps)
 
     const router = useRouter()
     const pages = [
         {
-            name: 'home',
+            name: 'Home',
             route: '/',
             active: false,
-            title: 'Copy to Clipboard Manager',
+            title: 'Clipboard Manager | Home',
+            keywords: 'home',
+            description: 'home',
+        },
+        {
+            name: 'Sign In',
+            route: '/signin',
+            active: false,
+            title: 'Clipboard Manager | Sign In',
+            keywords: '',
+            description: '',
+            requireAuth: false,
+        },
+        {
+            name: 'Create Account',
+            route: '/signup',
+            active: false,
+            title: 'Clipboard Manager | Sign Up',
+            keywords: '',
+            description: '',
+            requireAuth: false,
+        },
+        {
+            name: 'Sign Out',
+            route: '/signout',
+            active: false,
+            title: '',
+            keywords: '',
+            description: '',
+            requireAuth: true,
+        },
+
+        // temp pages
+        {
+            name: 'Features TODO',
+            route: '/todo',
+            active: false,
+            title: 'Clipboard Manager | Features TODO',
+            keywords: '',
+            description: '',
+        },
+        {
+            name: 'Help',
+            route: '/help',
+            active: false,
+            title: 'Clipboard Manager | Help',
             keywords: '',
             description: '',
         }
+
     ]
     const [currentPage, setCurrentPage] = useState(pages[0]);
 
@@ -43,6 +103,7 @@ export default function Layout({Component, pageProps, children}){
     resizeService.setHandler(resizeHandler);
 
     function resizeHandler(){
+        console.log('Layout:resizeHandler')
         setRandomNumber(Math.random())
     }
 
@@ -98,17 +159,43 @@ export default function Layout({Component, pageProps, children}){
                 <meta charSet="utf-8" />
                 <meta name={"keywords"} content={currentPage.keywords} />
                 <meta name={"description"} content={currentPage.description} />
-
+                <link href={"https://site1.admin.meanwebapp.com/themes/flatly.css"} type={"text/css"} />
+                <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+                <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+                <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+                <link rel="manifest" href="/site.webmanifest" />
                 {/*trackPageViews*/}
             </Head>
 
-            <header className={currentPage.name}>
+            <HeaderComponent>
+                <Nav
+                    isLoggedIn={pageProps.isLoggedIn}
+                    currentPage={currentPage}
+                    pages={pages}
+                    navClick={handleNavClick} />
+            </HeaderComponent>
 
-            </header>
+            {/*<header className={currentPage.name}>*/}
+            {/*    <div className={getHeaderClassName()}>*/}
+            {/*        <div className={"row"}>*/}
+            {/*            <div className={"col col-lg-4"}>*/}
+            {/*                <H1Component>*/}
+            {/*                <Link href={"/"}>*/}
+            {/*                    Clipboard Manager*/}
+            {/*                </Link>*/}
+            {/*                </H1Component>*/}
+            {/*            </div>*/}
+            {/*            <div className={"col col-lg-8"}>*/}
+            {/*                */}
+            {/*            </div>*/}
+            {/*        </div>*/}
+            {/*    </div>*/}
+            {/*</header>*/}
 
             <main className={inter.className}>
                 {children}
             </main>
+
             <FooterComponent />
         </>
     )

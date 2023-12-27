@@ -1,42 +1,48 @@
 import {BreakpointService} from "services/BreakpointService";
 import {useEffect, useState} from "react";
+import {debounce} from "@/services/DebounceService";
+import {ServerService} from "@/services/ServerService";
 
 
 export function DebugComponent() {
 
     const [isReady, setIsReady] = useState(false);
     const [windowWidth, setWindowWidth] = useState(0);
+    const [debugClassList, setDebugClassList] = useState([])
 
     let breakpointService = new BreakpointService();
+    let serverService = new ServerService();
 
     useEffect(() => {
-        console.log('Debug:useEffect')
-        if (!isReady) {
-            if(hasWindow() && isLocalHost()) {
-                window.addEventListener('resize', () => {
-                    setWindowWidth(window.innerWidth);
-                })
-                setWindowWidth(window.innerWidth);
-                setIsReady(true);
+        setIsReady(true);
+
+        // debugClassList
+        if(!serverService.isServerSide()){
+            let classList = ['debug'];
+            if(!isLocalHost()){
+                classList.push('d-none');
             }
-            // }else{
-            //     document.querySelector('.debug').remove();
-            // }
+            setDebugClassList(classList);
         }
+
+        // resize handler
+        setWindowWidth(window.innerWidth)
+
+        const resizeHandler = ()=>{
+            setWindowWidth(window.innerWidth)
+        }
+
+        let handler = debounce(()=>{
+            resizeHandler()
+        },250)
+
+        window.addEventListener('resize', handler);
+        return ()=> window.removeEventListener('resize', handler);
+
     }, []);
 
     function getClassList(){
-        console.log('Debug:getClassList')
-        let classList = "debug";
-
-        if(hasWindow()){
-            if(!isLocalHost()){
-                classList += " d-none";
-            }
-        }else{
-            classList += " d-none";
-        }
-        return classList;
+        return debugClassList.join(" ");
     }
 
     function hasWindow(){
@@ -49,7 +55,7 @@ export function DebugComponent() {
     }
 
     return (
-        <div className={getClassList()}>
+        <div id={isReady.toString()} className={getClassList()}>
             {isReady && breakpointService &&
                 <div>
                     breakpoint: {breakpointService.getCurrentBreakpointName()} <br />

@@ -3,8 +3,14 @@ import {useEffect, useState} from "react";
 import {BreakpointService} from "services/BreakpointService";
 import {ServerService} from "services/ServerService";
 import {ResizeService} from "services/ResizeService";
+import {UserService} from "@/services/UserService";
+import cookieCutter from 'cookie-cutter';
+
+import {USERID} from "@/services/AppService";
+import {FaClipboard, FaClipboardList} from "react-icons/fa6";
 function Nav({...pageProps}) {
 
+    // console.log('Nav:...pageProps', pageProps);
 
     const serverService = new ServerService();
     let breakpointService = null;
@@ -14,16 +20,27 @@ function Nav({...pageProps}) {
     const currentPage = pageProps.currentPage;
     const pages = pageProps.pages;
     const [currentBreakPoint, setCurrentBreakpoint] = useState('xxl');
+    const isLoggedIn = pageProps.isLoggedIn
 
-    const resizeService = new ResizeService();
+    let resizeService = new ResizeService();
     resizeService.setHandler(doRandom)
 
     function doRandom(){
+        console.log('doRandom')
         setRandomNumber(Math.random())
+        // setCurrentBreakpoint(breakpointService.getCurrentBreakpointName())
     }
 
+
     useEffect(()=>{
+        console.log('Nav:useEffect')
+        // resizeService = new ResizeService();
+        // resizeService.setHandler(doRandom)
+        //
         if(!serverService.isServerSide()){
+            console.log('setup')
+
+
             if(!breakpointService){
                 breakpointService = new BreakpointService();
             }
@@ -55,23 +72,37 @@ function Nav({...pageProps}) {
     }
 
     function getNavbarClassName(){
-        return 'navbar navbar-expand-lg'; // navbar-dark bg-primary';
+        return 'navbar navbar-expand-lg navbar-dark bg-primary'; // navbar-dark bg-primary';
     }
 
     function getNavbarDivClassName(){
         let ret = 'container-fluid';
         if(currentBreakPoint === 'xs' || currentBreakPoint === 'sm' || currentBreakPoint === 'md'){
-            ret += ' navbar-dark bg-primary';
+            // ret += ' navbar-dark bg-primary';
         }
         return ret;
+    }
+
+    function getNavbarUlClassList(){
+        let classList = ['navbar-nav'];
+        if(currentBreakPoint === 'lg'
+            || currentBreakPoint === 'xl'
+            || currentBreakPoint === 'xxl'){
+            classList.push('w-100')
+            classList.push('d-flex')
+            classList.push('justify-content-end');
+        }
+        return classList.join(" ");
     }
 
     return (
         <nav className={getNavbarClassName()}>
             <div className={getNavbarDivClassName()}>
-                <a className="navbar-brand m-0"
-                   href="#">
-                </a>
+                <Link className="navbar-brand m-0"
+                   href="/">
+                    <FaClipboardList />
+                    Clipboard Manager
+                </Link>
                 <button
                     id={"js-navbar-toggler"}
                     onClick={handleNavbarTogglerClick}
@@ -87,19 +118,29 @@ function Nav({...pageProps}) {
                 </button>
                 <div className="collapse navbar-collapse pl-3 pb-1"
                      id="navbarNav">
-                    <ul className="navbar-nav">
+                    <ul className={getNavbarUlClassList()}>
                         {pages.map((page, idx) => {
-                            return (
-                                <li className="nav-item" key={idx}>
-                                    <Link
-                                        href={page.route}
-                                        onClick={()=> handleNavClick(page)}
-                                        className={getClass(page)}
-                                        aria-current="page">
-                                        {page.name}
-                                    </Link>
-                                </li>
-                            )
+                            if(!page.hasOwnProperty('requireAuth')
+                                || (!page.requireAuth && !isLoggedIn)
+                                || (page.requireAuth && isLoggedIn)){
+                                return (
+                                    <li className="nav-item"
+                                        key={idx}>
+                                        <Link
+                                            href={page.route}
+                                            onClick={()=> handleNavClick(page)}
+                                            className={getClass(page)}
+                                            aria-current="page">
+                                            {page.name}
+                                        </Link>
+                                    </li>
+                                )
+                            }else{
+                                return (
+                                    <span key={idx}></span>
+                                )
+                            }
+
                         })}
                     </ul>
                 </div>

@@ -1,3 +1,18 @@
+## TODO:
+
+---
+
+- Ok I would like to suggest, create a hook for dispatcher, so you can use it later with providers and connect it with any DB you want in the future.
+- Separate also the localstorage usage from your services to can switch it easily when you change your storage provider.
+- Create hooks to separate logic from components.
+- Create a provider middleware to connect with any storage provider you need.
+
+---
+
+# Original
+
+---
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
@@ -16,7 +31,7 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+You can start editing the page by modifying `pages/[_id].js`. The page auto-updates as you edit the file.
 
 [API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
 

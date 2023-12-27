@@ -1,56 +1,122 @@
 import {CopyPasteService} from "@/services/CopyPasteService";
-import {useState} from "react";
-import {FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
+import {useEffect, useState} from "react";
+import {FaEye, FaEyeSlash, FaSpinner, FaThumbsUp, FaUpRightFromSquare, FaX} from "react-icons/fa6";
 import {FaCopy, FaHtml5, FaSave} from "react-icons/fa";
+import {LoadingComponent} from "@/components/loading/LoadingComponent";
 
-export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
 
-    const service = new CopyPasteService()
-    let newValue = boardItem;
+export default function BoardItem({boardId, boardIdx, boardItem, boardItemId, boardItemIdx, isLoggedIn, loadBoards, notifyParent, setupDragAndDrop}) {
 
+    const service = new CopyPasteService(isLoggedIn)
+
+    // let originalType = boardItem.type;
+    const [localType, setLocalType] = useState(boardItem.type)
+    const [currentValue, setCurrentValue] = useState(boardItem.text);
+    const [newValue, setNewValue] = useState(boardItem.text);
     const [wasCopied, setWasCopied] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [wasSaved, setWasSaved] = useState(false);
 
-    function onClick() {
+    useEffect(()=>{
+        // console.log('boardItem:useEffect')
+        setupDragAndDrop()
+    }, [])
+
+    function deleteBoardItem() {
         let conf = confirm('Are you sure you want to delete this item?')
         if (conf) {
-            service.deleteBoardItem(boardIdx, boardItemIdx)
-        } else {
-            console.log('do not delete')
+            service.deleteBoardItem({boardId, boardItemId: boardItem._id, boardIdx, boardItemIdx}).then(()=>{
+                loadBoards()
+            })
         }
     }
 
     function onChange(e) {
-        newValue = e.target.value;
+        setNewValue(e.target.value)
     }
 
     function onKeyUp(e) {
         if (e.key === 'Enter') {
-            newValue = e.target.value;
+            setNewValue(e.target.value)
             save()
         }
     }
 
-    function doCopy(e) {
-        navigator.clipboard.writeText(boardItem)
-        setWasCopied(true)
-        setTimeout(() => {
-            setWasCopied(false)
-        }, 1000)
+    function onFocus(e){
+        e.stopPropagation()
     }
 
-    function doOpen(){
+    function doCopy(e) {
+        e.target.blur()
+        navigator.clipboard.writeText(currentValue.toString()).then(()=>{
+            setWasCopied(true)
+            setTimeout(() => {
+                setWasCopied(false)
+            }, 1500)
+        })
+    }
+
+    function doOpen(e){
+        e.target.blur()
         if(isURL()){
-            window.open(boardItem)
+            window.open(boardItem.text)
         }
     }
 
-    function save() {
-        service.updateBoardItem(boardIdx, boardItemIdx, newValue)
-        setWasSaved(true)
-        setTimeout(() => {
-            setWasSaved(false)
-        }, 1000)
+    function save(e) {
+        try{
+            e.target.blur()
+        }catch(e){
+            // ignore
+        }
+        document.querySelector('#save-' + boardItem._id).blur()
+        if(!saving){
+            setSaving(true);
+            service.updateBoardItem({boardId, boardItemId: boardItem._id, boardIdx, boardItemIdx, newValue}).then((res)=>{
+                setCurrentValue(newValue);
+                setSaving(false);
+                setWasSaved(true);
+                setTimeout(() => {
+                    setWasSaved(false)
+                    loadBoards()
+                }, 1500)
+            })
+        }
+    }
+
+    function togglePasswordType(e){
+        e.preventDefault()
+        e.stopPropagation()
+        e.target.blur()
+        let newType = localType === 'password'
+            ? 'text'
+            : 'password';
+        setLocalType(newType);
+        service.toggleBoardItem({boardId, boardItemId, boardIdx, boardItemIdx, newType}).then(()=>{
+            loadBoards()
+        })
+    }
+
+    function renderPasswordToggle(){
+        return (
+            <a
+                className={"btn text-white btn-primary password-toggle"}
+                onClick={togglePasswordType}>
+                {renderEye()}
+            </a>
+        )
+    }
+
+    function renderEye(){
+        if(localType === 'text'){
+            return (
+                <FaEye />
+            )
+        }else{
+            return (
+                <FaEyeSlash />
+            )
+        }
     }
 
     function renderWasCopied() {
@@ -82,7 +148,7 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
     }
 
     function isURL(){
-        return boardItem.slice(0, 4) === 'http'
+        return currentValue.slice(0, 4) === 'http'
     }
 
     function getButtonLinkClassList(){
@@ -93,41 +159,89 @@ export default function BoardItem({boardIdx, boardItem, boardItemIdx}) {
         return classList.join(' ');
     }
 
+    function renderSaveIcon(){
+        if(saving){
+            return (
+                <FaSpinner />
+            )
+        }else if(wasSaved){
+            return (
+                <FaThumbsUp />
+            )
+        } else{
+            return (
+                <FaSave />
+            )
+        }
+    }
+
+    function renderCopyIcon(){
+        if(wasCopied){
+            return (
+                <FaThumbsUp />
+            )
+        } else{
+            return (
+                <FaCopy />
+            )
+        }
+    }
+
+    function getInputClassList(){
+        let classList = 'form-control ';
+        if(saving){
+            classList += 'border-warning'
+        }else if(wasSaved){
+            classList += 'border-success';
+        } else{
+
+        }
+        return classList;
+    }
+
     return (
-        <div className={"row mb-3"}>
-            <div className={"col-auto"}>
+        <div className={"row mb-3 board-item "}
+             id={"board-item-" + boardItemId}
+             data-id={boardItemId}
+             data-board-id={boardId}
+             data-board-idx={boardIdx}
+             data-board-item-id={boardItemId}
+             data-board-item-idx={boardItemIdx}>
+            <LoadingComponent isLoading={saving || wasSaved} />
+            <div className={"col-auto p-1"}>
                 <button className={"btn btn-danger"}
                         title={"Delete Item"}
-                        onClick={onClick}>
+                        onClick={deleteBoardItem}>
                     <FaX/>
                 </button>
             </div>
-            <div className={"col"}>
+            <div className={"col p-1"}>
                 <input
-                    type={"text"}
-                    className={"form-control"}
-                    defaultValue={boardItem}
+                    type={localType.toString()}
+                    className={getInputClassList()}
+                    defaultValue={currentValue.toString()}
                     onChange={onChange}
                     onKeyUp={onKeyUp}
+                    onFocus={onFocus}
                 />
+                {renderPasswordToggle()}
             </div>
-            <div className={"col-auto"}>
-                <button className={"btn btn-primary"}
+            <div className={"col-auto p-1"}>
+                <button id={"save-" + boardItemId}
+                        className={"btn btn-primary"}
                         title={"Save"}
                         onClick={save}>
-                    <FaSave/>
+                    {renderSaveIcon()}
                 </button>
-                {renderWasSaved()}
             </div>
-            <div className={"col-auto"}>
+            <div className={"col-auto p-1"}>
                 <button className={"btn btn-primary"}
                         title={"Copy"}
                         onClick={doCopy}>
-                    <FaCopy/>
+                    {renderCopyIcon()}
                 </button>
-                {renderWasCopied()}
             </div>
-            <div className={"col-auto"}>
+            <div className={"col-auto p-1"}>
                 <button className={getButtonLinkClassList()}
                         title={"Open"}
                         onClick={doOpen}>
