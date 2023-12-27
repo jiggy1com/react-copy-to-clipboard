@@ -1,6 +1,7 @@
 import {useState} from "react";
 import {FetchService} from "services/FetchService";
 import {FormMapFields} from "components/form/FormMapFields";
+import {LoadingComponent} from "@/components/loading/LoadingComponent";
 
 // example of formConfig
 const formConfig = {
@@ -24,6 +25,7 @@ const formConfig = {
 
 export default function FormComponent({formConfig}){
 
+    const [isLoading, setIsLoading] = useState(false);
     const [formSuccess, setFormSuccess] = useState(false);
     const [formMessage, setFormMessage] = useState(null)
     const [formData, setFormData] = useState({});
@@ -49,6 +51,7 @@ export default function FormComponent({formConfig}){
     function handleOnSubmit(e){
         e.preventDefault();
         e.stopPropagation();
+        setIsLoading(true);
 
         // clear message
         setFormMessage("");
@@ -63,14 +66,17 @@ export default function FormComponent({formConfig}){
                 if(res.success && typeof config.successHandler === 'function'){
                     config.successHandler()
                 }
+                setIsLoading(false);
             }).catch((err)=>{
                 // console.error('fetchService err', err);
                 setFormSuccess(false);
                 setFormMessage(err);
+                setIsLoading(false);
             });
         }else{
             setFormSuccess(false)
             setFormMessage(formValidation.message)
+            setIsLoading(false);
         }
 
 
@@ -107,6 +113,8 @@ export default function FormComponent({formConfig}){
     return (
 
         <form onSubmit={handleOnSubmit}>
+
+            <LoadingComponent isLoading={isLoading} />
 
             {formMessage &&
                 <div className={"container"}>

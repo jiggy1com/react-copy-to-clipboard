@@ -9,6 +9,8 @@ import {LoadingComponent} from "@/components/loading/LoadingComponent";
 import {FaEye, FaPlus, FaUpRightFromSquare, FaX} from "react-icons/fa6";
 import {FaCopy, FaSave} from "react-icons/fa";
 import {ServerService} from "@/services/ServerService";
+import {IndexSignedIn} from "@/components/index/IndexSignedIn";
+import {IndexSignedOut} from "@/components/index/IndexSignedOut";
 
 export default function Index({defaultBoards, isLoggedIn}) {
 
@@ -135,44 +137,25 @@ export default function Index({defaultBoards, isLoggedIn}) {
         }
     }
 
+    function renderTop(){
+        if(isLoggedIn){
+            return <IndexSignedIn />
+        }else{
+            return <IndexSignedOut addBoard={addBoard} />
+        }
+    }
+
     return (
         <div className={"container-fluid mt-5 mb-5"}>
             <div className={"row"}>
                 <div className={"col-12"}>
 
-                    <div className="p-5 mb-4 bg-light rounded-3">
-                        <div className="container-fluid py-5">
-                            <h1 className="display-5 fw-bold">Welcome to the Clipboard Manager</h1>
-                            <p className="col-md-8 fs-4">Do you find yourself having to copy and paste things often?
-                                And use different types of media to store your data, or simply can't find it?</p>
-                            <p className="col-md-8 fs-4">The Clipboard Manager was developed to help alleviate that stress by centralizing and
-                                organizing your frequent copy and paste needs.</p>
-                            <button className="btn btn-primary btn-lg"
-                                    onClick={addBoard}
-                                    type="button">Get Started Free
-                            </button>
-                            <Link className={"btn btn-success btn-lg m-3"}
-                                  href={"/signup"}>Create Free Account
-                            </Link>
-                        </div>
-                    </div>
+
 
                     {/*about the app*/}
 
-                    <div className={"alert alert-info"}>
+                    {renderTop()}
 
-                        <h4>How to Use</h4>
-
-                        <p>Start by clicking <button className={"btn btn-primary mb-3"}
-                                                  onClick={addBoard}>
-                                            Add New Board
-                        </button>, then click the <span className={"btn btn-primary"}> <FaPlus/> </span> icon to add a new board item.
-                            Need <Link className={"btn btn-primary"} href={"/help"}>
-                                More Info
-                            </Link>
-                        </p>
-
-                    </div>
 
                     {/*add board button*/}
 

@@ -9,7 +9,7 @@ import {GoogleAnalytics, usePageViews} from "nextjs-google-analytics";
 // css
 import 'styles/scss.scss';
 // import 'styles/bootstrap.css';
-import 'styles/themes/flatly.css';
+import 'styles/themes/united.css';
 import '@fortawesome/fontawesome-free';
 import '@fortawesome/free-brands-svg-icons';
 import '@fortawesome/free-solid-svg-icons'
